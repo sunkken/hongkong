@@ -1,0 +1,8 @@
+/data/**
+/examples/**
+*.metadata
+__pycache__/
+*.pyc
+*.pyo
+*.log
+.venv/
