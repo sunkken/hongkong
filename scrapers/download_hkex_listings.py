@@ -4,7 +4,7 @@ from pathlib import Path
 # ----------------------------
 # Configuration
 # ----------------------------
-save_dir = Path("../data/raw")
+save_dir = Path("/data/raw")
 save_dir.mkdir(parents=True, exist_ok=True)
 
 MAX_CONSECUTIVE_MISSING = 3  # stop after this many missing files
