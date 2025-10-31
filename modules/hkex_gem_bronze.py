@@ -2,7 +2,7 @@ from pathlib import Path
 import pandas as pd
 
 COLUMNS = [
-    "source_file", "listing_date", "stock_code", "company", "offer_price", "sub_ratio",
+    "source_file", "listing_date", "stock_code", "company", "offer_price", "subscription_ratio",
     "funds_raised", "shrout_at_listing", "mcap_at_listing", "industry",
     "place_of_incorporation", "listing_method", "sponsors", "reporting_accountant",
 ]
