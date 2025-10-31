@@ -1,2 +1,5 @@
-requests>=2.31.0
-beautifulsoup4>=4.12.2
+requests==2.31.0
+pandas==2.3.3
+python-calamine==0.5.4
+pyarrow==22.0.0
+
