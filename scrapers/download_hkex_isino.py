@@ -4,7 +4,7 @@ import requests
 from datetime import datetime
 
 URL = "https://www.hkex.com.hk/-/media/HKEX-Market/Services/Trading/Securities/Securities-Lists/ISINs-assigned-by-Other-Numbering-Agencies/isino.xls"
-SAVE_DIR = "/data/raw"
+SAVE_DIR = "./data/raw"
 FILENAME = "isino.xls"
 SAVE_PATH = os.path.join(SAVE_DIR, FILENAME)
 META_PATH = SAVE_PATH + ".metadata"

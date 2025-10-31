@@ -10,7 +10,7 @@ COLUMNS = [
 combined = pd.DataFrame(columns=COLUMNS)
 
 # Pick up every Excel file whose name starts with GEM_
-base_dir = Path("data/normalized")
+base_dir = Path("./data/normalized")
 files = sorted(base_dir.glob("GEM_*.xlsx"))
 
 print(f"Found {len(files)} files to process.")
@@ -44,7 +44,6 @@ for f in files:
 print("\nCombined preview:")
 print(combined.head())
 
-# Save combined result (choose one)
-# combined.to_parquet("data/bronze/gem_bronze.parquet", index=False)  # <-- Parquet
-combined.to_csv("data/bronze/gem_bronze.csv", index=False)        # <-- CSV
+combined.to_csv("data/bronze/gem_bronze.csv", index=False)
 
+print(f"Saved {len(combined)} rows to ./data/bronze/gem_bronze.csv")

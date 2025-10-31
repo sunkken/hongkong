@@ -1,25 +1,31 @@
+
 from pathlib import Path
 import pandas as pd
-import shutil
 
-raw_dir = Path("data/raw")
-out_dir = Path("data/normalized")
+raw_dir = Path("./data/raw")
+out_dir = Path("./data/normalized")
 out_dir.mkdir(parents=True, exist_ok=True)
 
-# Process all GEM files (xls and xlsx)
-for f in sorted(list(raw_dir.glob("GEM_*.xls")) + list(raw_dir.glob("GEM_*.xlsx"))):
-    target = out_dir / (f.stem + ".xlsx")
+files = sorted(list(raw_dir.glob("*.xls")) + list(raw_dir.glob("*.xlsx")))
+print(f"Found {len(files)} files to normalize.")
 
-    if f.suffix.lower() == ".xlsx":
-        # Copy existing xlsx directly
-        print(f"Copying {f.name} → {target.name}")
-        shutil.copy2(f, target)
+for f in files:
+    if f.name.startswith("~$"):  # skip temp/lock files
         continue
 
-    # Convert .xls to .xlsx
+    target = out_dir / (f.stem + ".xlsx")
+    print(f"Normalizing {f.name} → {target.name}")
+
     try:
-        print(f"Converting {f.name} → {target.name}")
-        df = pd.read_excel(f, header=None)
-        df.to_excel(target, index=False, header=False)
-    except Exception as e:
-        print(f"[WARN] Could not read {f.name}: {e}")
+        # Try OOXML first (works for true .xlsx and many mislabeled .xls)
+        df = pd.read_excel(f, header=None, engine="openpyxl")
+    except Exception as e_openpyxl:
+        try:
+            # Fallback for genuine legacy .xls binaries
+            df = pd.read_excel(f, header=None, engine="xlrd")
+        except Exception as e_xlrd:
+            print(f"[WARN] Could not read {f.name}: openpyxl={e_openpyxl}; xlrd={e_xlrd}")
+            continue
+
+    # Unified write (values only)
+    df.to_excel(target, index=False, header=False)
