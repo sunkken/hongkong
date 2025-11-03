@@ -1,3 +1,4 @@
+
 from pathlib import Path
 import pandas as pd
 import numpy as np
@@ -24,6 +25,16 @@ def clean_and_transform(file_path):
     df = pd.read_excel(file_path, engine="openpyxl", header=None, skiprows=1)
     df = df.iloc[:, :11]
     df = df.iloc[1:]  # Trim away the first row
+
+    # Flatten multi-line cells
+    df = df.replace(r'[\r\n]+', ' ', regex=True)
+
+    # Normalize excessive spacing in company names only
+    if df.shape[1] > 2:
+        df.iloc[:, 2] = df.iloc[:, 2].astype(str).str.replace(r' {2,}', ' ', regex=True)
+
+    # Drop rows where stock_code is missing
+    df = df[df.iloc[:, 1].notna()]
 
     empty_row_index = df[df.isnull().all(axis=1)].index.min()
     if pd.notna(empty_row_index):
@@ -54,7 +65,10 @@ def clean_and_transform(file_path):
     return df
 
 # Loop through all matching files
-for file in sorted(base_dir.glob("Main_*.xlsx")):
+files = sorted(base_dir.glob("Main_*.xlsx"))
+print(f"🔍 Found {len(files)} files to process.")
+
+for file in files:
     try:
         df_cleaned = clean_and_transform(file)
         combined = pd.concat([combined, df_cleaned], ignore_index=True)
@@ -62,9 +76,9 @@ for file in sorted(base_dir.glob("Main_*.xlsx")):
         any_skipped = True
 
 # Output results
-print("Combined Data Preview:")
+print("\n📊 Combined Data Preview:")
 print(combined.head())
-print(f"Total rows combined: {len(combined)}")
+print(f"📈 Total rows combined: {len(combined)}")
 
 if any_skipped:
     print("\n⚠️ One or more files were skipped due to errors.")
