@@ -1,4 +1,3 @@
-
 from pathlib import Path
 import pandas as pd
 
@@ -47,6 +46,11 @@ for f in files:
         df_out = df.iloc[:, :13].copy()
         df_out.insert(0, "source_file", f.name)
         df_out.columns = COLUMNS
+
+        # Convert stock_code to numeric
+        df_out["stock_code"] = pd.to_numeric(df_out["stock_code"], errors="coerce")
+        df_out = df_out.dropna(subset=["stock_code"])
+        df_out["stock_code"] = df_out["stock_code"].astype(int)
 
         combined = pd.concat([combined, df_out], ignore_index=True)
     except Exception:

@@ -1,4 +1,3 @@
-
 from pathlib import Path
 import pandas as pd
 import numpy as np
@@ -62,6 +61,12 @@ def clean_and_transform(file_path):
         df[df.shape[1]] = np.nan
 
     df.columns = COLUMNS
+
+    # Convert stock_code to numeric
+    df["stock_code"] = pd.to_numeric(df["stock_code"], errors="coerce")
+    df = df.dropna(subset=["stock_code"])
+    df["stock_code"] = df["stock_code"].astype(int)
+
     return df
 
 # Loop through all matching files
