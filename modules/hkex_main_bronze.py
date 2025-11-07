@@ -68,17 +68,17 @@ def clean_and_transform(file_path: Path) -> pd.DataFrame:
         df[df.shape[1]] = np.nan
     df.columns = COLUMNS
 
-    # Convert stock_code to int
+    # Convert stock_code to int safely
     df["stock_code"] = pd.to_numeric(df["stock_code"], errors="coerce")
-    df = df.dropna(subset=["stock_code"])
-    df["stock_code"] = df["stock_code"].astype(int)
+    df = df.dropna(subset=["stock_code"]).copy()
+    df.loc[:, "stock_code"] = df["stock_code"].astype(int)
 
     return df
 
 
 def process_main_bronze():
     """Combine all Main Board normalized Excel files into one bronze CSV."""
-    combined = pd.DataFrame(columns=COLUMNS)
+    combined = None
     any_skipped = False
 
     files = sorted(BASE_DIR.glob("Main_*.xlsx"))
@@ -87,9 +87,22 @@ def process_main_bronze():
     for file in files:
         try:
             df_cleaned = clean_and_transform(file)
-            combined = pd.concat([combined, df_cleaned], ignore_index=True)
+
+            # Drop all-NaN columns defensively
+            df_cleaned = df_cleaned.dropna(axis=1, how="all")
+
+            # ✅ Avoid concat with empty DataFrame (prevents FutureWarning)
+            if combined is None:
+                combined = df_cleaned
+            else:
+                combined = pd.concat([combined, df_cleaned], ignore_index=True)
         except Exception:
             any_skipped = True
+
+    # Handle case where no files were successfully processed
+    if combined is None or combined.empty:
+        print("⚠️ No valid data processed; no file saved.")
+        return
 
     combined.to_csv(OUTPUT_PATH, index=False)
     print(f"✅ Combined {len(combined)} rows → {OUTPUT_PATH}")

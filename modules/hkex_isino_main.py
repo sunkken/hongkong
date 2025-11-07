@@ -9,7 +9,6 @@ pd.set_option("future.no_silent_downcasting", True)
 
 BASE_DIR = Path("./data/normalized")
 FILE_PATH = BASE_DIR / "isino.xlsx"
-
 OUTPUT_PATH = Path("./data/bronze/isino_bronze.csv")
 
 COLUMNS = [
@@ -66,23 +65,16 @@ def clean_and_transform(file_path):
 # ----------------------------
 def convert_isino():
     """Load, clean, and export ISINO Excel data."""
-    combined = pd.DataFrame(columns=COLUMNS)
+    print("📘 Processing ISINO Excel file...")
 
     try:
         df_cleaned = clean_and_transform(FILE_PATH)
-        combined = pd.concat([combined, df_cleaned], ignore_index=True)
-        print("✅ File processed successfully.")
+        OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+        df_cleaned.to_csv(OUTPUT_PATH, index=False)
+        print(f"✅ Processed {len(df_cleaned)} rows → {OUTPUT_PATH}")
     except Exception as e:
-        print(f"⚠️ Failed to process file: {e}")
-        return
-
-    print("\n📊 Data Preview:")
-    print(combined.head())
-    print(f"📈 Total rows processed: {len(combined)}")
-
-    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    combined.to_csv(OUTPUT_PATH, index=False)
-    print(f"\n📁 Saved cleaned data to {OUTPUT_PATH}")
+        print(f"❌ Failed to process ISINO file: {e}")
+        raise  # allow main.py to catch and log the failure
 
 
 # ----------------------------
