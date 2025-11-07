@@ -72,5 +72,8 @@ def fetch_file():
         print(f"❌ Download failed: {e}")
 
 
+# ----------------------------
+# Entry point
+# ----------------------------
 if __name__ == "__main__":
     fetch_file()

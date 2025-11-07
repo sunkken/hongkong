@@ -1,74 +1,84 @@
 from pathlib import Path
 import pandas as pd
 
-# Define output columns
+
+# ----------------------------
+# Configuration
+# ----------------------------
+BASE_DIR = Path("./data/normalized")
+OUTPUT_PATH = Path("./data/bronze/gem_bronze.csv")
+OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+
 COLUMNS = [
     "source_file", "listing_date", "stock_code", "company", "offer_price", "subscription_ratio",
     "funds_raised", "shrout_at_listing", "mcap_at_listing", "industry",
     "place_of_incorporation", "listing_method", "sponsors", "reporting_accountant",
 ]
 
-# Initialize empty DataFrame and skip flag
-combined = pd.DataFrame(columns=COLUMNS)
-any_skipped = False
 
-# Define base directory
-base_dir = Path("./data/normalized")
-files = sorted(base_dir.glob("GEM_*.xlsx"))
+# ----------------------------
+# Helper functions
+# ----------------------------
+def clean_and_transform(file_path: Path) -> pd.DataFrame:
+    """Clean and standardize a single GEM listing Excel file."""
+    df_raw = pd.read_excel(file_path, engine="openpyxl", header=None)
+    df_raw = df_raw.replace(r'[\r\n]+', ' ', regex=True)
 
-print(f"🔍 Found {len(files)} files to process.")
+    # Locate header row and columns
+    header_row = df_raw.iloc[9].astype(str).str.strip()
+    valid_cols = [i for i, val in enumerate(header_row) if val and val.lower() != "nan"]
 
-# Process each file
-for f in files:
-    try:
-        df_raw = pd.read_excel(f, header=None)
+    # Extract data rows
+    df = df_raw.iloc[11:, valid_cols].reset_index(drop=True)
+    df.columns = header_row[valid_cols]
 
-        # Flatten multi-line cells by replacing line breaks with spaces
-        df_raw = df_raw.replace(r'[\r\n]+', ' ', regex=True)
+    # Stop before the 'Total' row
+    first_col = df.columns[0]
+    total_mask = df[first_col].astype(str).str.strip().str.lower() == "total"
+    if total_mask.any():
+        df = df.iloc[:total_mask.idxmax(), :]
 
-        header_row = df_raw.iloc[9].astype(str).str.strip()
-        valid_cols = [i for i, val in enumerate(header_row) if val and val.lower() != "nan"]
+    # Drop rows with blank stock_code
+    second_col = df.columns[1]
+    df = df[df[second_col].notna() & (df[second_col].astype(str).str.strip() != "")]
 
-        df = df_raw.iloc[11:, valid_cols].reset_index(drop=True)
-        df.columns = header_row[valid_cols]
+    # Align and standardize
+    df_out = df.iloc[:, :13].copy()
+    df_out.insert(0, "source_file", file_path.name)
+    df_out.columns = COLUMNS
 
-        # Stop at 'Total'
-        first_col = df.columns[0]
-        total_mask = df[first_col].astype(str).str.strip().str.lower() == "total"
-        if total_mask.any():
-            df = df.iloc[:total_mask.idxmax(), :]
+    # Convert stock_code to int
+    df_out["stock_code"] = pd.to_numeric(df_out["stock_code"], errors="coerce")
+    df_out = df_out.dropna(subset=["stock_code"])
+    df_out["stock_code"] = df_out["stock_code"].astype(int)
 
-        # Drop rows where second column is NaN or empty
-        second_col = df.columns[1]
-        df = df[df[second_col].notna() & (df[second_col].astype(str).str.strip() != "")]
+    return df_out
 
-        # Build aligned output and append
-        df_out = df.iloc[:, :13].copy()
-        df_out.insert(0, "source_file", f.name)
-        df_out.columns = COLUMNS
 
-        # Convert stock_code to numeric
-        df_out["stock_code"] = pd.to_numeric(df_out["stock_code"], errors="coerce")
-        df_out = df_out.dropna(subset=["stock_code"])
-        df_out["stock_code"] = df_out["stock_code"].astype(int)
+def process_gem_bronze():
+    """Combine all GEM normalized Excel files into one bronze CSV."""
+    combined = pd.DataFrame(columns=COLUMNS)
+    any_skipped = False
 
-        combined = pd.concat([combined, df_out], ignore_index=True)
-    except Exception:
-        any_skipped = True
+    files = sorted(BASE_DIR.glob("GEM_*.xlsx"))
+    print(f"🔍 Found {len(files)} GEM files to process.")
 
-# Output results
-print("\n📊 Combined Data Preview:")
-print(combined.head())
-print(f"📈 Total rows combined: {len(combined)}")
+    for file in files:
+        try:
+            df_cleaned = clean_and_transform(file)
+            combined = pd.concat([combined, df_cleaned], ignore_index=True)
+        except Exception:
+            any_skipped = True
 
-if any_skipped:
-    print("\n⚠️ One or more files were skipped due to errors.")
-else:
-    print("\n✅ All files processed successfully.")
+    combined.to_csv(OUTPUT_PATH, index=False)
+    print(f"✅ Combined {len(combined)} rows → {OUTPUT_PATH}")
 
-# Ensure output directory exists
-Path("data/bronze").mkdir(parents=True, exist_ok=True)
+    if any_skipped:
+        print("⚠️  One or more GEM files were skipped due to errors.")
 
-# Save to CSV
-combined.to_csv("data/bronze/gem_bronze.csv", index=False)
-print("\n📁 Saved combined data to data/bronze/gem_bronze.csv")
+
+# ----------------------------
+# Entry point
+# ----------------------------
+if __name__ == "__main__":
+    process_gem_bronze()
