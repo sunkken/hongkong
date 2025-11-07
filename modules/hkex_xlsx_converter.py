@@ -17,7 +17,7 @@ def read_excel_file(file_path: Path):
     """Read Excel file using openpyxl first, fallback to xlrd for old .xls."""
     try:
         return pd.read_excel(file_path, header=None, engine="openpyxl")
-    except Exception as e_openpyxl:
+    except Exception:
         try:
             return pd.read_excel(file_path, header=None, engine="xlrd")
         except Exception:
