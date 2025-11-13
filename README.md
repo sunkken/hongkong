@@ -1,13 +1,22 @@
 # 🐍 Hong Kong Securities Data
 
-This project downloads and manages securities data from the Hong Kong Exchange (HKEX), including the ISIN file from:  
-[HKEX ISIN List](https://www.hkex.com.hk/-/media/HKEX-Market/Services/Trading/Securities/Securities-Lists/ISINs-assigned-by-Other-Numbering-Agencies/isino.xls)
+This project downloads transforms securities data from the Hong Kong Exchange (HKEX) into a clean dataset.
+## 📂 Data Sources
+
+### Pages
+[Securities Lists Page](https://www.hkex.com.hk/Services/Trading/Securities/Securities-Lists)  
+[New Listings Page](https://www2.hkexnews.hk/New-Listings/New-Listing-Information/)  
+
+### Files
+[ISINs Assigned by HKEX](https://www.hkex.com.hk/-/media/HKEX-Market/Services/Trading/Securities/Securities-Lists/ISINs-assigned-by-HKEX/isinsehk.xls)  
+[ISINs Assigned by Other Numbering Agencies](https://www.hkex.com.hk/-/media/HKEX-Market/Services/Trading/Securities/Securities-Lists/ISINs-assigned-by-Other-Numbering-Agencies/isino.xls)  
+[Securities Using Standard Transfer Form](https://www.hkex.com.hk/-/media/HKEX-Market/Services/Trading/Securities/Securities-Lists/Securities-Using-Standard-Transfer-Form-(including-GEM)-By-Stock-Code-Order/secstkorder.xls)  
+[Main Board New Listing Reports](https://www2.hkexnews.hk/-/media/HKEXnews/Homepage/New-Listings/New-Listing-Information/New-Listing-Report/Main/NLR2025_Eng.xlsx) (1994-2025)  
+[GEM New Listing Reports](https://www2.hkexnews.hk/-/media/HKEXnews/Homepage/New-Listings/New-Listing-Information/New-Listing-Report/GEM/e_newlistings2025.xlsx) (1999-2025)  
 
 ---
 
-## ⚙️ Setup
-
-### 1. Requirements
+### ⚙️ Requirements
 - **Python 3.8+**
 - Optional: **Git** for version control
 
@@ -18,46 +27,13 @@ python --version
 
 ---
 
-### 2. Create & Activate Virtual Environment
-**Windows**
-```bash
-python -m venv .venv
-.\.venv\Scriptsctivate
-```
-
-**macOS / Linux**
-```bash
-python -m venv .venv
-source .venv/bin/activate
-```
-
----
-
-### 3. Install Dependencies
-```bash
-pip install -r requirements.txt
-```
-
----
-
-### 4. Run the Script
-```bash
-python services/download_hkex_isino.py
-```
-
-The script:
-- Creates `./data/raw/` if missing  
-- Downloads `isino.xls`  
-- Saves metadata to skip future re-downloads if unchanged  
-
----
-
 ### ✅ Quick Setup Summary
 ```bash
-git clone <your-repo>
+mkdir hongkong
 cd hongkong
+git pull git@github.com:sunkken/hongkong.git # or https://github.com/sunkken/hongkong.git if not using ssh
 python -m venv .venv
-.\.venv\Scriptsactivate        # or "source .venv/bin/activate on mac/linux"
+.venv\Scripts\Activate.ps1 # or "source .venv/bin/activate on mac/linux"
 pip install -r requirements.txt
-python services/download_hkex_isino.py
+python main.py
 ```
