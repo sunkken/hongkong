@@ -1,67 +1,110 @@
-import runpy
 import time
+import importlib
 
-scripts = [
-    # Scrapers
-    "scrapers/download_hkex_isino.py",
-    "scrapers/download_hkex_listings.py",
+# ----------------------------------------------------
+# Define pipeline stages
+# ----------------------------------------------------
 
-    # XLSX converter
-    "modules/hkex_xlsx_converter.py",
-
-    # Modules ISINO
-    "modules/hkex_isino_main.py",
-    "modules/hkex_isino_stock_types.py",
-    "modules/hkex_isino_national_agencies.py",
-
-    # Modules Bronze
-    "modules/hkex_main_bronze.py",
-    "modules/hkex_gem_bronze.py",
-
-    # Modules Silver
-    "modules/hkex_main_silver.py",
-    "modules/hkex_gem_silver.py",
+SCRAPER_TASKS = [
+    "scrapers.download_hkex_isino",
+    "scrapers.download_hkex_listings",
 ]
 
-print("\n🚀 Starting main run sequence...\n")
+NORMALIZATION_TASKS = [
+    "modules.hkex_xlsx_converter",
+]
 
-results = []
-start_total = time.time()
+BRONZE_TASKS = [
+    "modules.hkex_isino_bronze",
+    "modules.hkex_isino_stock_types",
+    "modules.hkex_isino_national_agencies",
+    "modules.hkex_main_bronze",
+    "modules.hkex_gem_bronze",
+]
 
-for script in scripts:
-    print(f"▶️  {script}")
+SILVER_TASKS = [
+    "modules.hkex_main_silver",
+    "modules.hkex_gem_silver",
+]
+
+# ----------------------------------------------------
+# Utility to run a task module
+# ----------------------------------------------------
+def run_task(module_path: str):
+    print(f"▶️  Running: {module_path}")
+
     start = time.time()
-
     try:
-        runpy.run_path(script, run_name="__main__")
+        module = importlib.import_module(module_path)
+        if hasattr(module, "main"):
+            module.main()  # recommended entry point
+        elif hasattr(module, "__main__"):
+            module.__main__()  # fallback
+        else:
+            # Last fallback: if script only runs on import
+            pass
+
         elapsed = time.time() - start
-        print(f"✅ Done: {script} ({elapsed:.1f}s)")
-        results.append((script, "✅ Success", elapsed))
+        print(f"✅ Success: {module_path} ({elapsed:.1f}s)")
+        return True
+
     except Exception as e:
         elapsed = time.time() - start
-        print(f"❌ Failed: {script} ({elapsed:.1f}s) → {e}")
-        results.append((script, f"❌ Failed ({e})", elapsed))
+        print(f"❌ ERROR in {module_path} ({elapsed:.1f}s)\n   → {e}\n")
+        return False
 
-    print("-" * 60)  # separator between scripts
 
-# ----------------------------
-# Summary
-# ----------------------------
-print("\n" + "=" * 60)
-print("🏁 Run summary")
-print("=" * 60)
+# ----------------------------------------------------
+# Orchestrate all pipeline stages
+# ----------------------------------------------------
+def run_pipeline():
+    start = time.time()
+    results = []
 
-max_len = max(len(s) for s, _, _ in results)
-for script, status, _ in results:
-    print(f"{script.ljust(max_len)}  {status}")
+    print("\n🚀 Starting full HKEX pipeline...\n")
 
-success_count = sum(1 for _, status, _ in results if "✅" in status)
-fail_count = len(results) - success_count
-print("-" * 60)
-print(f"✅ Successful: {success_count}   ❌ Failed: {fail_count}")
-print(f"⏱️  Total runtime: {time.time() - start_total:.1f}s")
-print("=" * 60 + "\n")
+    PIPELINE = [
+        ("Scrapers", SCRAPER_TASKS),
+        ("Normalization", NORMALIZATION_TASKS),
+        ("Bronze", BRONZE_TASKS),
+        ("Silver", SILVER_TASKS),
+    ]
 
-if fail_count > 0:
-    print("⚠️  Some scripts failed. Please check the log above.\n")
-    exit(1)
+    for label, task_list in PIPELINE:
+        print(f"\n=== 📦 {label} Stage ===")
+
+        for task in task_list:
+            ok = run_task(task)
+            results.append((task, ok))
+
+    # Summary
+    print("\n" + "=" * 60)
+    print("🏁 Pipeline Summary")
+    print("=" * 60)
+
+    max_len = max(len(t) for t, _ in results)
+
+    success_count = 0
+    for task, ok in results:
+        status = "✅ OK" if ok else "❌ FAIL"
+        if ok:
+            success_count += 1
+        print(f"{task.ljust(max_len)}  {status}")
+
+    fail_count = len(results) - success_count
+    print("-" * 60)
+    print(f"✔ Successful: {success_count}")
+    print(f"✖ Failed:     {fail_count}")
+    print(f"⏱ Total time: {time.time() - start:.1f}s")
+    print("=" * 60)
+
+    if fail_count > 0:
+        print("\n⚠️  Some tasks failed — please review log.\n")
+        exit(1)
+
+
+# ----------------------------------------------------
+# Entry point
+# ----------------------------------------------------
+if __name__ == "__main__":
+    run_pipeline()

@@ -1,17 +1,17 @@
 # TODOs for hongkong project
 
 ### Matching checks to do
-#### 1. Check isin list assigned by hkex versus the one assigned by other agencies
+#### ✔️ 1. Check isin list assigned by hkex versus the one assigned by other agencies
 
 - https://www.hkex.com.hk/-/media/HKEX-Market/Services/Trading/Securities/Securities-Lists/ISINs-assigned-by-HKEX/isinsehk.xls
 
 - https://www.hkex.com.hk/-/media/HKEX-Market/Services/Trading/Securities/Securities-Lists/ISINs-assigned-by-Other-Numbering-Agencies/isino.xls
 
-#### 2. Check if we get more matches from securities using standard transfer form combined by ISIN files
+#### ✔️ 2. Check if we get more matches from securities using standard transfer form combined by ISIN files
 
 - https://www.hkex.com.hk/-/media/HKEX-Market/Services/Trading/Securities/Securities-Lists/Securities-Using-Standard-Transfer-Form-(including-GEM)-By-Stock-Code-Order/secstkorder.xls
 
-#### 3. Join data from all three files and check for duplicates or mismatches
+#### ✔️ 3. Join data from all three files and check for duplicates or mismatches
 
 ---
 

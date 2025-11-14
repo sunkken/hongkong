@@ -18,3 +18,7 @@ logs
 *.njsproj
 *.sln
 *.sw?
+
+target/
+dbt_packages/
+logs/
