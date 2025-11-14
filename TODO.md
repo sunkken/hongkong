@@ -11,12 +11,13 @@
 
 - https://www.hkex.com.hk/-/media/HKEX-Market/Services/Trading/Securities/Securities-Lists/Securities-Using-Standard-Transfer-Form-(including-GEM)-By-Stock-Code-Order/secstkorder.xls
 
-#### 3. Append to current matches
+#### 3. Join data from all three files and check for duplicates or mismatches
 
 ---
 
 ### Check non-matches from Compustat Global to HKEX data
-1. Check SAS-Studio WRDS HKEX List and match against current sample.
+1. Check SAS-Studio WRDS HKEX List and match against current sample.  
+   Link: https://wrds-cloud.wharton.upenn.edu/SASStudio/
 2. Get list of non-matches from Compustat Global and from HKEX sample.
 3. Manually check non-matches for patterns or issues. Make more matches if possible.
 
