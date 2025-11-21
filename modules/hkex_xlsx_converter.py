@@ -1,14 +1,12 @@
 from pathlib import Path
 import pandas as pd
 
-
 # ----------------------------
 # Configuration
 # ----------------------------
 RAW_DIR = Path("./data/raw")
 OUT_DIR = Path("./data/normalized")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
-
 
 # ----------------------------
 # Helper functions
@@ -23,15 +21,15 @@ def read_excel_file(file_path: Path):
         except Exception:
             return None
 
-
+# ----------------------------
+# Main process
+# ----------------------------
 def normalize_excel_files():
     """Convert all Excel files in raw_dir into clean .xlsx files with summary output."""
     files = sorted(list(RAW_DIR.glob("*.xls")) + list(RAW_DIR.glob("*.xlsx")))
     if not files:
         print("⚠️  No Excel files found in ./data/raw — skipping normalization.")
         return
-
-    print(f"\n📄 Normalizing {len(files)} Excel files...")
 
     summary = {"converted": 0, "cached": 0, "failed": 0, "skipped": 0}
 
@@ -59,17 +57,16 @@ def normalize_excel_files():
     # ----------------------------
     # Final Summary
     # ----------------------------
-    print("\n📊 Normalization Summary:")
-    print(f"  ✅ Converted: {summary['converted']}")
-    print(f"  🗂️  Cached:   {summary['cached']}")
-    print(f"  ⚠️  Skipped:  {summary['skipped']}")
-    print(f"  ❌ Failed:    {summary['failed']}")
+    print(
+        f"\n📊 Normalization Summary: ✅ Converted: {summary['converted']}, "
+        f"🗂️ Cached: {summary['cached']}, ⚠️ Skipped: {summary['skipped']}, "
+        f"❌ Failed: {summary['failed']}"
+    )
 
     if summary["failed"] > 0:
         raise RuntimeError(f"{summary['failed']} Excel files failed to normalize.")
 
-    print("\n✅ Normalization complete.")
-
+    print("✅ Normalization complete.\n")
 
 # ----------------------------
 # Entry point
