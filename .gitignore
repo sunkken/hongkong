@@ -1,4 +1,4 @@
-data/
+# General
 /examples/**
 *.metadata
 __pycache__/
@@ -7,8 +7,6 @@ __pycache__/
 *.log
 logs
 .venv/
-
-# Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -19,9 +17,14 @@ logs
 *.sln
 *.sw?
 
+# DBT
 target/
 dbt_packages/
 logs/
 
 # Environment variables (WRDS user info etc.)
 .env
+
+# Data
+hongkong.db
+data/
