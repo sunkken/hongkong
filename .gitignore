@@ -22,3 +22,6 @@ logs
 target/
 dbt_packages/
 logs/
+
+# Environment variables (WRDS user info etc.)
+.env

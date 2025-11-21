@@ -27,7 +27,7 @@ python --version
 
 ---
 
-### ✅ Quick Setup Summary
+### ✅ Folder Setup
 ```bash
 mkdir hongkong
 cd hongkong
@@ -37,3 +37,13 @@ python -m venv .venv
 pip install -r requirements.txt
 python main.py
 ```
+
+### 🔐 WRDS Credentials Setup
+
+This project requires WRDS credentials for downloading additional datasets.  
+
+1. Create a `.env` file in the project root with the following lines (it will **not** be committed to GitHub):
+
+```text
+WRDS_USER=your_username_here
+WRDS_PASS=your_password_here
