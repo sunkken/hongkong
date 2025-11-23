@@ -18,7 +18,7 @@
 ### Check non-matches from Compustat Global to HKEX data
 1. ✔️ Check WRDS HKEX List and match against current sample.  
    Link: https://wrds-cloud.wharton.upenn.edu/SASStudio/
-2. ☐ Get list of non-matches from Compustat Global and from HKEX sample.
+2. ✔️ Get list of non-matches from Compustat Global and from HKEX sample.
 3. ☐ Manually check non-matches for patterns or issues. Make more matches if possible.
 
 ---

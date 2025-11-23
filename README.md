@@ -17,7 +17,7 @@ This project downloads transforms securities data from the Hong Kong Exchange (H
 ---
 
 ### ⚙️ Requirements
-- **Python 3.8+**
+- **Python 3.13**
 - Optional: **Git** for version control
 
 Check:
@@ -32,7 +32,7 @@ python --version
 mkdir hongkong
 cd hongkong
 git pull git@github.com:sunkken/hongkong.git # or https://github.com/sunkken/hongkong.git if not using ssh
-python -m venv .venv
+python -m venv .venv # Make sure you are running python 3.13 for this command!
 .venv\Scripts\Activate.ps1 # or "source .venv/bin/activate on mac/linux"
 pip install -r requirements.txt
 python main.py

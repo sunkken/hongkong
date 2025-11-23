@@ -7,6 +7,6 @@ sqlalchemy~=2.0.20
 psycopg2-binary~=2.9.9
 python-dotenv~=1.1.1
 
-# DBT and SQLite
-dbt-core==1.9.1
-dbt-sqlite==1.9.1
+## DBT and SQLite
+#dbt-core==1.9.1
+#dbt-sqlite==1.9.1
