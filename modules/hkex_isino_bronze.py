@@ -14,7 +14,7 @@ SEC_FILE_PATH = BASE_DIR / "secstkorder.xlsx"
 OUTPUT_PATH = Path("./data/bronze/isino_bronze.csv")
 
 COLUMNS = [
-    "company", "isin_code", "stock_code", "stock_type",
+    "company", "isin", "stock_code", "stock_type",
     "place_of_incorporation", "national_agency",
 ]
 

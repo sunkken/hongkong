@@ -1,0 +1,20 @@
+-- Hkex rows with no ISIN match in Funda_a_ISIN
+SELECT hkex_main.*
+FROM hkex_main
+LEFT JOIN funda_a_isin
+    ON hkex_main.isin = funda_a_isin.isin
+WHERE funda_a_isin.isin IS NULL;
+
+-- Unique ISINs from Hkex rows with no ISIN match in Funda_a_ISIN
+SELECT DISTINCT hkex_main.isin
+FROM hkex_main
+LEFT JOIN funda_a_isin
+    ON hkex_main.isin = funda_a_isin.isin
+WHERE funda_a_isin.isin IS NULL;
+
+-- Count unique ISINs missing on right
+SELECT COUNT(DISTINCT hkex_main.isin) AS missing_isins
+FROM hkex_main
+LEFT JOIN funda_a_isin
+    ON hkex_main.isin = funda_a_isin.isin
+WHERE funda_a_isin.isin IS NULL;

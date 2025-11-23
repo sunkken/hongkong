@@ -16,27 +16,27 @@
 ---
 
 ### Check non-matches from Compustat Global to HKEX data
-1. Check SAS-Studio WRDS HKEX List and match against current sample.  
+1. ✔️ Check WRDS HKEX List and match against current sample.  
    Link: https://wrds-cloud.wharton.upenn.edu/SASStudio/
-2. Get list of non-matches from Compustat Global and from HKEX sample.
-3. Manually check non-matches for patterns or issues. Make more matches if possible.
+2. ☐ Get list of non-matches from Compustat Global and from HKEX sample.
+3. ☐ Manually check non-matches for patterns or issues. Make more matches if possible.
 
 ---
 
 ### Follow along with plan from Mail #1 and SGX example
 
 #### Mail #1: Här är förslag till workflow för HKEX:
-1.	Masterfil med HKEX-kod–ticker–ISIN för alla bolag på HKEX som sedan kan matchas till Compustat 2015–
+1.	✔️ Masterfil med HKEX-kod–ticker–ISIN för alla bolag på HKEX som sedan kan matchas till Compustat 2015.
 2.	Lista över alla filing-rubriker från HKEX-bolag per ID under tidsperioden
 3.	Texten från alla filings som innehåller ”audit” som PDF:er så att vi kan identifiera audit opinions per fiscal year
 
 #### SGX example: Sample Construction
-1.	Download all listings from SGX’s web page: https://links.sgx.com/1.0.0/corporate-information/x, where x is 1 to 3,028 (as of December 12, 2024). Generate a unique list of ISINs (sgx-isins.csv) from the list (N=1,864).
-2.	Less listings that are not regulated by SGX (ASX; GlobalQuote), out of scope (SGX Xtranet), or outdated (CLOB International) (N=1,784).
-3.	Take the ISINs from sgx-isin.csv and use them to screen the Compustat Global database (/wrds/comp/sasdata/d_global/g_fundq). Generate a unique list of ISINs (compustat-isin.csv) from the resulting screen with parameters: indfmt = 'INDL', popsrc = 'I', consol = 'C', datafmt = 'HIST_STD', fyearq >= 2015,  datacqtr ne '' (Nfirms=722; Nobs=21,683).
-4.	Less observations for fiscal 2024 (Nfirms = 722; Nobs = 20,529).
-5.	Manually added missing observations and delistings (Nfirms = 722; Nobs = 20,564).
-6.	We classify firms as quarterly reporters (qrt = 1) for each observation as follows. We use Worldscope’s WC05200 variable as our primary data source. When Worldscope data is missing, we use Bloomberg’s EARN_ANN_DT_TIME_HIST_WITH_EPS variable following Finne et al. (2024). We validate the data by manually checking approximately 40% of the observations.
+1.	✔️ Download all listings from SGX’s web page: https://links.sgx.com/1.0.0/corporate-information/x, where x is 1 to 3,028 (as of December 12, 2024). Generate a unique list of ISINs (sgx-isins.csv) from the list (N=1,864).
+2.	❓Less listings that are not regulated by SGX (ASX; GlobalQuote), out of scope (SGX Xtranet), or outdated (CLOB International) (N=1,784).
+3.	✔️ Take the ISINs from sgx-isin.csv and use them to screen the Compustat Global database (/wrds/comp/sasdata/d_global/g_fundq). Generate a unique list of ISINs (compustat-isin.csv) from the resulting screen with parameters: indfmt = 'INDL', popsrc = 'I', consol = 'C', datafmt = 'HIST_STD', fyearq >= 2015,  datacqtr ne '' (Nfirms=722; Nobs=21,683).
+4.	❓Less observations for fiscal 2024 (Nfirms = 722; Nobs = 20,529).
+5. ☐ Manually added missing observations and delistings (Nfirms = 722; Nobs = 20,564).
+6.	☐ We classify firms as quarterly reporters (qrt = 1) for each observation as follows. We use Worldscope’s WC05200 variable as our primary data source. When Worldscope data is missing, we use Bloomberg’s EARN_ANN_DT_TIME_HIST_WITH_EPS variable following Finne et al. (2024). We validate the data by manually checking approximately 40% of the observations.
 
 | year | firms | observations | qrt     |
 |------|-------|---------------|---------|

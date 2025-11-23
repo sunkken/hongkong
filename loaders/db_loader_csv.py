@@ -25,7 +25,6 @@ def csv_loader(csv_file: str, table_name: str, db_path: str):
     Path(db_path).parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(db_path) as conn:
         df.to_sql(table_name, conn, if_exists="replace", index=False)
-        print(f"✅ Saved {len(df)} rows to table '{table_name}' in {db_path}")
 
     return len(df)
 

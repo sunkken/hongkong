@@ -47,3 +47,4 @@ This project requires WRDS credentials for downloading additional datasets.
 ```text
 WRDS_USER=your_username_here
 WRDS_PASS=your_password_here
+DB_PATH=data/hongkong.db (main.py will create db in this location if it doesn't exist)

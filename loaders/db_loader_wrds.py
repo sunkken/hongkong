@@ -7,14 +7,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# ----------------------------
-# Main process
-# ----------------------------
-def wrds_loader(sql_file: str, table_name: str, db_path: str):
+def wrds_loader(sql_file: str, table_name: str, db_path: str, isin_list_file: str = None, batch_size: int = 1000):
     """
-    sql_file : Path to the SQL file (e.g., models/dl_funda_a.sql)
+    sql_file : Path to the SQL file
     table_name : SQLite table name
     db_path : Path to SQLite database
+    isin_list_file : Optional path to a text file with one ISIN per line
+    batch_size : Number of ISINs per batch
     """
     sql_path = Path(sql_file)
     if not sql_path.exists():
@@ -22,39 +21,64 @@ def wrds_loader(sql_file: str, table_name: str, db_path: str):
         return 0
 
     with open(sql_path, "r") as f:
-        sql_query = f.read()
+        sql_template = f.read().rstrip().rstrip(';')  # <<< strip trailing semicolon if present in sql-file
 
-    # ----------------------------
+    # Load ISIN list if provided
+    isin_list = []
+    if isin_list_file:
+        isin_path = Path(isin_list_file)
+        if not isin_path.exists():
+            print(f"❌ ISIN list file not found: {isin_path}")
+            return 0
+        with open(isin_path, "r") as f:
+            isin_list = [line.strip() for line in f if line.strip()]
+        if not isin_list:
+            print(f"❌ ISIN list is empty: {isin_path}")
+            return 0
+        print(f"ℹ️ Loaded {len(isin_list)} ISINs from {isin_path.name}")
+
     # Connect to WRDS
-    # ----------------------------
     USER = os.getenv("WRDS_USER")
     PASSWORD = os.getenv("WRDS_PASS")
     engine = create_engine(
         f"postgresql://{USER}:{PASSWORD}@wrds-pgdata.wharton.upenn.edu:9737/wrds?sslmode=require"
     )
 
+    all_dfs = []
     try:
-        df = pd.read_sql(sql_query, engine)
-        print(f"📦 Queried WRDS: {sql_path.name} ({len(df)} rows)")
+        # Determine if batching is needed
+        batches = [isin_list[i:i+batch_size] for i in range(0, len(isin_list), batch_size)] if isin_list and len(isin_list) > batch_size else [isin_list] if isin_list else [None]
+
+        for idx, batch in enumerate(batches):
+            if batch:
+                isin_str = ",".join(f"'{s}'" for s in batch)
+                sql_query = f"{sql_template} AND isin IN ({isin_str})" if "WHERE" in sql_template.upper() else f"{sql_template} WHERE isin IN ({isin_str})"
+            else:
+                sql_query = sql_template
+
+            df = pd.read_sql(sql_query, engine)
+            all_dfs.append(df)
+            if batch:
+                print(f"📦 Queried batch {idx+1}: {len(df)} rows")
+            else:
+                print(f"📦 Queried {len(df)} rows")
     except Exception as e:
         print(f"❌ WRDS query failed: {e}")
         return 0
     finally:
         engine.dispose()
 
-    # ----------------------------
+    # Combine all batches
+    final_df = pd.concat(all_dfs, ignore_index=True)
+
+    if final_df.empty:
+        raise ValueError(f"❌ Query returned 0 rows: {sql_file}")
+
     # Save to SQLite
-    # ----------------------------
     Path(db_path).parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(db_path) as conn:
-        df.to_sql(table_name, conn, if_exists="replace", index=False)
-        print(f"✅ Saved {len(df)} rows to table '{table_name}' in {db_path}")
+        final_df.to_sql(table_name, conn, if_exists="replace", index=False)
 
-    return len(df)
+    print(f"✅ Saved {len(final_df)} rows to '{table_name}'")
+    return len(final_df)
 
-
-# ----------------------------
-# Entry point
-# ----------------------------
-if __name__ == "__main__":
-    wrds_loader("models/download_funda_a.sql", "wrds_funda_a", "data/hongkong.db")
