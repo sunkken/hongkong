@@ -81,4 +81,3 @@ def wrds_loader(sql_file: str, table_name: str, db_path: str, isin_list_file: st
 
     print(f"✅ Saved {len(final_df)} rows to '{table_name}'")
     return len(final_df)
-

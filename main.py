@@ -3,7 +3,7 @@
 #
 # Orchestrates HKEX and WRDS data workflows:
 # - Downloads and cleans HKEX data, pushes into SQLite database
-# - Downloads WRDS data for exchange 170, pushes into SQLite database
+# - Downloads WRDS data, pushes into SQLite database
 # - Downloads WRDS data filtered by ISINs in HKEX, pushes into SQLite database
 # ============================================================
 import runpy
@@ -79,6 +79,12 @@ ISIN_EXPORT_QUERY_FILE = "models/db_init/isin_export.sql"
 ISIN_EXPORT_OUTPUT = "data/isin_list.txt"
 
 # ----------------------------
+# Stock Code export configuration
+# ----------------------------
+STOCK_CODE_EXPORT_QUERY_FILE = "models/db_init/stock_code_export.sql"
+STOCK_CODE_EXPORT_OUTPUT = "data/stock_code_list.txt"
+
+# ----------------------------
 # Main run
 # ----------------------------
 print("\n🚀 Starting main run sequence...\n")
@@ -143,6 +149,26 @@ except Exception as e:
     elapsed = time.time() - start
     loader_results.append(("ISIN Export", f"❌ Failed ({e})", 0, elapsed))
     print(f"❌ ISIN export failed: {e}")
+
+# ----------------------------
+# Export Stock Code list AFTER ISIN export
+# ----------------------------
+print("\n📄 Exporting unique Stock Codes...\n")
+with open(STOCK_CODE_EXPORT_QUERY_FILE, "r") as f:
+    stock_code_sql = f.read()
+
+start = time.time()
+try:
+    from helpers.export_stock_codes import export_unique_stock_codes  # Ensure helper exists
+    with suppress_output():
+        num_stock_codes = export_unique_stock_codes(DB_PATH, STOCK_CODE_EXPORT_OUTPUT, stock_code_sql)
+    elapsed = time.time() - start
+    loader_results.append(("Stock Code Export", "✅ Success", num_stock_codes, elapsed))
+    print(f"✅ Exported {num_stock_codes} stock codes to {STOCK_CODE_EXPORT_OUTPUT} ({elapsed:.1f}s)")
+except Exception as e:
+    elapsed = time.time() - start
+    loader_results.append(("Stock Code Export", f"❌ Failed ({e})", 0, elapsed))
+    print(f"❌ Stock Code export failed: {e}")
 
 # ----------------------------
 # Run WRDS loaders

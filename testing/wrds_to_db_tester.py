@@ -25,11 +25,11 @@ from loaders.db_loader_wrds import wrds_loader
 # ----------------------------
 load_dotenv()  # make sure WRDS credentials are loaded
 
-SQL_FILE = Path(__file__).parent / "wrds_tester_query.sql"  # path to SQL file (from project root)
-TABLE_NAME = "wrds_tester_tmp"                              # table name to save results
-DB_PATH = "data/hongkong.db"                                # SQLite database path
-ISIN_LIST_FILE = None                                       # optional ISIN list file, e.g., "data/isin_list.txt"
-BATCH_SIZE = 1000                                           # batch size for large ISIN lists
+SQL_FILE = Path(__file__).parent / "wrds_to_db_tester_query.sql" # path to SQL file (from project root)
+TABLE_NAME = "wrds_to_db_tester_tmp"                             # table name to save results
+DB_PATH = "data/hongkong.db"                                     # SQLite database path
+ISIN_LIST_FILE = "data/isin_list.txt"                            # optional ISIN list file, e.g., "data/isin_list.txt"
+BATCH_SIZE = 1000                                                # batch size for large ISIN lists
 
 # ----------------------------
 # Run WRDS test

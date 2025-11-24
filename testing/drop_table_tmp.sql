@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS wrds_tester_tmp;
