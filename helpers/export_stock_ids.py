@@ -39,7 +39,7 @@ def export_stock_ids(db_path: str, output_file: str, sql_query: str):
 # ----------------------------
 if __name__ == "__main__":
     DB_PATH = "data/hongkong.db"
-    OUTPUT_FILE = "data/stock_ids.txt"
+    OUTPUT_FILE = "data/lists/stock_ids.txt"
     SQL_QUERY = "SELECT stockId FROM stock_code_to_id;"  # adjust if needed
 
     print(f"\n🚀 Exporting stockIds from {DB_PATH}...\n")
