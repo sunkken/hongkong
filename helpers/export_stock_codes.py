@@ -33,12 +33,12 @@ def export_main_and_gem(db_path: str, output_dir: str):
     output_dir = Path(output_dir)
 
     # MAIN board
-    sql_main = "SELECT stock_code FROM hkex_main;"
+    sql_main = "SELECT stock_code FROM hkex_main WHERE stock_type = 'ORD SH';"
     main_file = output_dir / "stock_code_list_main.txt"
     main_count = export_unique_stock_codes(db_path, main_file, sql_main)
 
     # GEM board
-    sql_gem = "SELECT stock_code FROM hkex_gem;"
+    sql_gem = "SELECT stock_code FROM hkex_gem WHERE stock_type = 'ORD SH';"
     gem_file = output_dir / "stock_code_list_gem.txt"
     gem_count = export_unique_stock_codes(db_path, gem_file, sql_gem)
 
