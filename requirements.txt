@@ -6,9 +6,8 @@ pyarrow~=22.0.0
 sqlalchemy~=2.0.20
 psycopg2-binary~=2.9.9
 python-dotenv~=1.1.1
-
-# WRDS if we want variable descriptions for the tables...
-
+beautifulsoup4~=4.12.2
+requests~=2.31.0
 
 ## DBT and SQLite
 #dbt-core==1.9.1

@@ -1,6 +1,6 @@
 
 # ============================================================
-# press_main.py
+# press_main.py (PRESS RELEASE DOWNLOAD WORKFLOW - OPTIONAL, only if needed)
 #
 # >>> IMPORTANT: Run this AFTER main.py has prepared listings <<<
 #
@@ -114,8 +114,8 @@ def step_4_download_and_update():
 # Steps to run (comment/uncomment to run a subset)
 # ------------------------------------------------------------
 STEPS = [
-    # ("Step 1: stock_id scraper", step_1_scrape),
-    # ("Step 2: load CSV -> SQLite", step_2_load),
+    ("Step 1: stock_id scraper", step_1_scrape),
+    ("Step 2: load CSV -> SQLite", step_2_load),
     ("Step 3: export stockIds -> text file", step_3_export),
     ("Step 4a: build pending list", step_4a_build_pending),
     ("Step 4: download & auto-update ignore list", step_4_download_and_update),
