@@ -24,7 +24,9 @@ OUTPUT_CSV = "data/processed/auditor_opinion_flags.csv"
 keywords = {
     "qualified_opinion": "qualified opinion",
     "adverse_opinion": "adverse opinion",
-    "disclaimer_of_opinion": "disclaimer of opinion"
+    "disclaimer_of_opinion": "disclaimer of opinion",
+    "emphasis_of_matter": "emphasis of matter",
+    "going_concern": "material uncertainty related to going concern"
 }
 
 # ------------------------------------------------------------
