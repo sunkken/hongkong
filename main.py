@@ -52,10 +52,11 @@ scripts = [
     "modules/hkex_gem_bronze.py",
     "modules/hkex_main_silver.py",
     "modules/hkex_gem_silver.py",
+    "modules/auditor_opinion_flags.py",
 ]
 
 # ------------------------------------------------------------
-# Files and tables for CSV loader
+# Files and tables for CSV loader (pushes clean csv-files into SQLite Database)
 # ------------------------------------------------------------
 CSV_LOADERS = [
     {"csv_file": "data/silver/gem_silver.csv", "table_name": "hkex_gem"},
@@ -63,16 +64,19 @@ CSV_LOADERS = [
     {"csv_file": "data/bronze/isino_stock_types.csv", "table_name": "desc_hkex_stock_types"},
     {"csv_file": "data/bronze/isino_national_agencies.csv", "table_name": "desc_hkex_national_agencies"},
     {"csv_file": "data/raw/auditor_reports.csv", "table_name": "hkex_auditor_reports"},
+    {"csv_file": "data/processed/auditor_opinion_flags.csv", "table_name": "auditor_opinion_flags"},
 ]
 
 # ------------------------------------------------------------
-# ISIN export configuration
+# Code export configuration (export unique ISINs and Stock Codes from database to text files)
 # ------------------------------------------------------------
 ISIN_EXPORT_QUERY_FILE = "models/db_init/isin_export.sql"
 ISIN_EXPORT_OUTPUT = "data/isin_list.txt"
+STOCK_CODE_EXPORT_QUERY_FILE = "models/db_init/stock_code_export.sql"
+STOCK_CODE_EXPORT_OUTPUT = "data/stock_code_list.txt"
 
 # ------------------------------------------------------------
-# WRDS loaders configuration
+# WRDS loaders configuration (downloads data from WRDS and pushes into SQLite Database)
 # ------------------------------------------------------------
 WRDS_LOADERS = [
     {"sql_file": "models/db_init/dl_funda_a_170.sql", "table_name": "funda_a_170"},
@@ -80,12 +84,6 @@ WRDS_LOADERS = [
     {"sql_file": "models/db_init/dl_funda_a_isin.sql", "table_name": "funda_a_isin", "isin_list_file": "data/isin_list.txt"},
     {"sql_file": "models/db_init/dl_funda_q_isin.sql", "table_name": "funda_q_isin", "isin_list_file": "data/isin_list.txt"},
 ]
-
-# ------------------------------------------------------------
-# Stock Code export configuration
-# ------------------------------------------------------------
-STOCK_CODE_EXPORT_QUERY_FILE = "models/db_init/stock_code_export.sql"
-STOCK_CODE_EXPORT_OUTPUT = "data/stock_code_list.txt"
 
 # ------------------------------------------------------------
 # Main run
