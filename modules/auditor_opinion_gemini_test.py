@@ -1,5 +1,5 @@
 import configparser
-import fitz  # Same as your colleague's notebook
+import fitz
 import pandas as pd
 from google import genai
 from pathlib import Path
@@ -8,7 +8,7 @@ import random
 import time
 
 # ============================================================
-# Step 1: Read API key (EXACTLY like your colleague's notebook)
+# Step 1: Read API key
 # ============================================================
 print("📖 Reading API key from google-gemini.cfg...")
 cfg = configparser.ConfigParser()
@@ -16,7 +16,7 @@ cfg.read('google-gemini.cfg')
 api_key = cfg['Authentication']['api_key']
 client = genai.Client(api_key=api_key)
 
-# Step 2: Define model (EXACTLY like your colleague)
+# Step 2: Define model
 MODEL = 'gemini-2.5-flash'
 # Keep free tier happy: slow pace with retries on 429s
 REQUEST_PAUSE_SEC = 7.5  # ~8 req/min
@@ -50,7 +50,7 @@ IMPORTANT_KEEP_TOKENS = [
 print(f"🤖 Using model: {MODEL}\n")
 
 # ============================================================
-# Step 3: Extract text function (EXACTLY like your colleague)
+# Step 3: Extract text function
 # ============================================================
 def extract_text_from_pdf(file_path):
     """Extract all pages, skipping only pages that look like pure statements/notes without opinion cues."""

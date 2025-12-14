@@ -10,8 +10,8 @@
 
 import os
 import sqlite3
-import pdfplumber
 import pandas as pd
+import re
 from pathlib import Path
 
 # ------------------------------------------------------------
@@ -19,14 +19,18 @@ from pathlib import Path
 # ------------------------------------------------------------
 DB_PATH = "data/hongkong.db"
 PDF_DIR = "data/raw/auditor_pdfs"
+TEXT_DIR = "data/raw/auditor_reports_txt"
 OUTPUT_CSV = "data/processed/auditor_opinion_flags.csv"
 
-keywords = {
-    "qualified_opinion": "qualified opinion",
-    "adverse_opinion": "adverse opinion",
-    "disclaimer_of_opinion": "disclaimer of opinion",
-    "emphasis_of_matter": "emphasis of matter",
-    "going_concern": "material uncertainty related to going concern"
+# Regex patterns (case-insensitive). We prefer searching `.txt` files in TEXT_DIR;
+# fall back to PDF extraction when a `.txt` is missing.
+PATTERNS = {
+    "qualified_opinion": re.compile(r"\bqualified opinion\b", re.I),
+    "adverse_opinion": re.compile(r"\badverse opinion\b", re.I),
+    "disclaimer_of_opinion": re.compile(r"\bdisclaimer (of )?opinion\b", re.I),
+    "emphasis_of_matter": re.compile(r"\bemphasis of matter\b", re.I),
+    # Conservative going-concern pattern; avoid matching bare 'going concern' without context
+    "going_concern": re.compile(r"material uncertainty (related to|regarding) going concern", re.I),
 }
 
 # ------------------------------------------------------------
@@ -81,7 +85,8 @@ def scan_opinions(stock_codes=None):
     if os.path.exists(OUTPUT_CSV) and os.path.getsize(OUTPUT_CSV) > 0:
         try:
             cache_df = pd.read_csv(OUTPUT_CSV)
-            processed = set(cache_df["document_name"].tolist())
+            # normalize cached document names to stems (no extension)
+            processed = set(Path(x).stem for x in cache_df["document_name"].tolist())
         except Exception:
             cache_df = pd.DataFrame()
 
@@ -105,37 +110,43 @@ def scan_opinions(stock_codes=None):
     
     for idx, full_path in enumerate(pdf_paths, 1):
         filename = os.path.basename(full_path)
-        
-        # Skip if already processed
-        if filename in processed:
+        doc_stem = Path(filename).stem
+        # Attempt to parse leading date from filename stem: yyyymmdd<...>
+        m = re.match(r"^(\d{4})(\d{2})(\d{2})", doc_stem)
+        if m:
+            report_date = f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
+        else:
+            report_date = ""
+
+        # Skip if already processed (compare stems)
+        if doc_stem in processed:
             skipped_count += 1
             continue
 
-        full_path_obj = Path(full_path)
-        
-        # Verify file exists
-        if not full_path_obj.exists():
-            print(f"❌ [{idx}/{total_pdfs}] Missing: {filename}")
-            failed_count += 1
-            continue
-
-        # Extract text from PDF
+        # Prefer extracted .txt file
+        txt_path = Path(TEXT_DIR) / f"{doc_stem}.txt"
         text = ""
-        try:
-            with pdfplumber.open(full_path_obj) as pdf:
-                for page in pdf.pages:
-                    page_text = page.extract_text()
-                    if page_text:
-                        text += page_text + "\n"
-        except Exception as e:
-            print(f"❌ [{idx}/{total_pdfs}] Failed to read {filename}: {e}")
+
+        if txt_path.exists():
+            try:
+                with open(txt_path, 'r', encoding='utf-8') as fh:
+                    text = fh.read()
+            except Exception as e:
+                print(f"⚠️ [{idx}/{total_pdfs}] Failed to read TXT {txt_path.name}: {e} — will try PDF fallback")
+
+        # If no .txt file available, skip (no PDF fallback configured)
+        if not text:
+            print(f"⚠️ [{idx}/{total_pdfs}] TXT missing for {doc_stem}; skipping (no PDF fallback)")
             failed_count += 1
             continue
 
-        # Check for opinion keywords
-        text_lower = text.lower()
-        flags = {k: int(v in text_lower) for k, v in keywords.items()}
-        row_df = pd.DataFrame([{"document_name": filename, **flags}])
+        # Normalize text: lowercase and collapse whitespace
+        text_proc = re.sub(r"\s+", " ", text).lower()
+
+        # Check for opinion patterns
+        flags = {k: int(bool(p.search(text_proc))) for k, p in PATTERNS.items()}
+
+        row_df = pd.DataFrame([{"document_name": doc_stem, "report_date": report_date, **flags}])
         
         # Append to working dataframe and save incrementally
         working_df = pd.concat([working_df, row_df], ignore_index=True)
