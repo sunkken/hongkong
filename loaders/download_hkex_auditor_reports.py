@@ -48,15 +48,18 @@ def fetch_auditor_reports() -> bool:
             # Extract hyperlink and derive relative PDF path
             link_tag = row.find("a", href=True)
             link = link_tag["href"] if link_tag else ""
-            filename = os.path.basename(link.split("?")[0]) if link else ""
-            pdf_path = f"data/raw/auditor_pdfs/{filename}" if filename else ""
+            raw_name = os.path.basename(link.split("?")[0]) if link else ""
+            # derive document_name (basename without extension) to match other tables
+            document_name = os.path.splitext(raw_name)[0] if raw_name else ""
+            pdf_path = f"data/raw/auditor_pdfs/{raw_name}" if raw_name else ""
 
             data.append([
                 cols[0],  # stock_code
                 cols[1],  # listed_company_name
                 cols[2],  # announcement_date
                 link,     # hyperlink
-                pdf_path  # relative path for portability
+                pdf_path, # relative path for portability
+                document_name  # extracted document_name (no extension)
             ])
 
         # Save to CSV
@@ -67,7 +70,8 @@ def fetch_auditor_reports() -> bool:
                 "listed_company_name",
                 "announcement_date",
                 "hyperlink",
-                "pdf_path"
+                "pdf_path",
+                "document_name"
             ])
             writer.writerows(data)
 

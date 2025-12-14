@@ -30,4 +30,4 @@ hongkong.db
 data/
 
 # Tester output files
-testing/*.csv
+testing

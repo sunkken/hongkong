@@ -19,7 +19,7 @@ from pathlib import Path
 # ------------------------------------------------------------
 DB_PATH = "data/hongkong.db"
 PDF_DIR = "data/raw/auditor_pdfs"
-TEXT_DIR = "data/raw/auditor_reports_txt"
+TEXT_DIR = "data/raw/auditor_reports_sliced"
 OUTPUT_CSV = "data/processed/auditor_opinion_flags.csv"
 
 # Regex patterns (case-insensitive). We prefer searching `.txt` files in TEXT_DIR;
@@ -111,8 +111,8 @@ def scan_opinions(stock_codes=None):
     for idx, full_path in enumerate(pdf_paths, 1):
         filename = os.path.basename(full_path)
         doc_stem = Path(filename).stem
-        # Attempt to parse leading date from filename stem: yyyymmdd<...>
-        m = re.match(r"^(\d{4})(\d{2})(\d{2})", doc_stem)
+        # Parse first occurrence of 8 digits (YYYYMMDD) anywhere in the stem
+        m = re.search(r"(\d{4})(\d{2})(\d{2})", doc_stem)
         if m:
             report_date = f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
         else:
