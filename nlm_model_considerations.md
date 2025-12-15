@@ -1,7 +1,7 @@
 # NLP Model Considerations — Auditor Report Classification
 
 Date: 2025-12-14
-Author: Toni + GPT
+Author: X
 
 ## Purpose
 Summarise options and an execution plan for classifying auditor reports into these flags:
