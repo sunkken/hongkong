@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 """
-loaders/db_to_csv_tester.py
+loaders/db_to_csv_loader.py
 
-Run a SQL file and save the single query result into a CSV file.
+Run a SQL file and save the single query result into both CSV and Excel files.
 This is a minimal, project-local copy of `testing/db_to_csv_tester.py` adjusted
-to export the `hkex_dataset` view result into `data/processed/hkex_dataset.csv`.
+to export the `hkex_dataset` view result into `data/processed/hkex_dataset.csv` and
+`data/processed/hkex_dataset.xlsx`.
 """
 
 import sys
@@ -27,7 +28,7 @@ OUTPUT_DIR = PROJECT_ROOT / "data" / "processed"
 DB_PATH = os.getenv("DB_PATH", "data/hongkong.db")
 
 if __name__ == "__main__":
-    print(f"\n🚀 Exporting view to CSV, output directory: '{OUTPUT_DIR}'\n")
+    print(f"\n🚀 Exporting view to CSV + Excel, output directory: '{OUTPUT_DIR}'\n")
     start = time.time()
 
     if not SQL_FILE.exists():
@@ -52,11 +53,19 @@ if __name__ == "__main__":
                     df = pd.read_sql(query, conn)
                     # If only one query, use a friendly filename
                     if len(queries) == 1:
-                        output_file = OUTPUT_DIR / "hkex_dataset.csv"
+                        output_csv = OUTPUT_DIR / "hkex_dataset.csv"
+                        output_xlsx = OUTPUT_DIR / "hkex_dataset.xlsx"
                     else:
-                        output_file = OUTPUT_DIR / f"query_{i}.csv"
-                    df.to_csv(output_file, index=False)
-                    print(f"✅ Saved {len(df)} rows to '{output_file.name}'")
+                        output_csv = OUTPUT_DIR / f"query_{i}.csv"
+                        output_xlsx = OUTPUT_DIR / f"query_{i}.xlsx"
+                    # write both CSV and Excel
+                    df.to_csv(output_csv, index=False)
+                    try:
+                        df.to_excel(output_xlsx, index=False)
+                    except Exception:
+                        # If Excel writer is not available, continue after saving CSV
+                        print("⚠️ Could not write Excel file (missing engine). CSV saved.")
+                    print(f"✅ Saved {len(df)} rows to '{output_csv.name}' and '{output_xlsx.name}'")
                 except Exception as e:
                     print(f"❌ Query {i} failed → {e}")
 

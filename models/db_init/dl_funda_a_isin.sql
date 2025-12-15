@@ -1,4 +1,4 @@
-SELECT *
+SELECT gvkey, isin, conm, datadate, fyear
 FROM comp.g_funda
 WHERE indfmt = 'INDL'
   AND popsrc = 'I'

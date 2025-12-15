@@ -1,4 +1,4 @@
-SELECT gvkey, isin, datadate, fyear, at, revt, cstk
+SELECT gvkey, isin, conm, datadate, fyear
 FROM comp.g_funda
 WHERE exchg = 170
   AND indfmt = 'INDL'

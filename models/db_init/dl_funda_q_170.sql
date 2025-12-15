@@ -1,4 +1,4 @@
-SELECT gvkey, isin, datadate, fyearq, fqtr, atq, revtq, cstkq
+SELECT gvkey, isin, conm, datadate, datacqtr, datafqtr, fyearq, fqtr
 FROM comp.g_fundq
 WHERE exchg = 170
   AND indfmt = 'INDL'

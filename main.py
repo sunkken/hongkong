@@ -81,9 +81,9 @@ STOCK_CODE_EXPORT_OUTPUT = "data/stock_code_list.txt"
 # WRDS loaders configuration (downloads data from WRDS and pushes into SQLite Database)
 # ------------------------------------------------------------
 WRDS_LOADERS = [
-    # {"sql_file": "models/db_init/dl_funda_a_170.sql", "table_name": "funda_a_170"},
-    # {"sql_file": "models/db_init/dl_funda_q_170.sql", "table_name": "funda_q_170"},
-    # {"sql_file": "models/db_init/dl_funda_a_isin.sql", "table_name": "funda_a_isin", "isin_list_file": "data/isin_list.txt"},
+    {"sql_file": "models/db_init/dl_funda_a_170.sql", "table_name": "funda_a_170"},
+    {"sql_file": "models/db_init/dl_funda_q_170.sql", "table_name": "funda_q_170"},
+    {"sql_file": "models/db_init/dl_funda_a_isin.sql", "table_name": "funda_a_isin", "isin_list_file": "data/isin_list.txt"},
     {"sql_file": "models/db_init/dl_funda_q_isin.sql", "table_name": "funda_q_isin", "isin_list_file": "data/isin_list.txt"},
 ]
 
