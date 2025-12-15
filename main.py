@@ -18,6 +18,7 @@ from dotenv import load_dotenv
 from loaders.db_loader_csv import csv_loader
 from loaders.db_loader_wrds import wrds_loader
 from loaders.db_run_sql import run_sql_file
+from loaders.db_to_csv_loader import export_sql_file
 from helpers.export_isins import export_unique_isins
 
 # ------------------------------------------------------------
@@ -90,10 +91,20 @@ WRDS_LOADERS = [
 # ------------------------------------------------------------
 # Database queries (table and view creation)
 # ------------------------------------------------------------
-# Order matters: create `hkex_all_stock_code_isin` first, then `hkex_dataset` which depends on it
+# Order matters: create `hkex_all_stock_code_isin` first, then `hkex_dataset` and `hkex_document_dataset` which depend on it
 DB_QUERIES = [
     "models/db_init/isin_stock_code_export.sql",
     "models/db_init/hkex_dataset.sql",
+    "models/db_init/hkex_document_dataset.sql",
+]
+
+# ------------------------------------------------------------
+# Export Queries (export views to CSV/XLSX)
+# ------------------------------------------------------------
+EXPORT_SQLS = [
+    "models/db_init/select_hkex_dataset.sql",
+    "models/db_init/select_hkex_document_dataset.sql",
+    "models/db_init/select_hkex_dataset_hkex_document_exists.sql",
 ]
 
 # ------------------------------------------------------------
@@ -254,15 +265,18 @@ if fail_count + loader_fail > 0:
     print("⚠️ Some scripts/loaders failed. Please check the log above.\n")
 
 # ------------------------------------------------------------
-# Export hkex_dataset view to CSV
+# Export views to CSV/XLSX
 # ------------------------------------------------------------
-print("\n📤 Exporting `hkex_dataset` view to CSV...\n")
-start = time.time()
-try:
-    with suppress_output():
-        runpy.run_path("loaders/db_to_csv_loader.py", run_name="__main__")
-    elapsed = time.time() - start
-    print(f"✅ Export completed ({elapsed:.1f}s)\n")
-except Exception as e:
-    elapsed = time.time() - start
-    print(f"❌ Export failed: {e} ({elapsed:.1f}s)\n")
+
+print("\n📤 Exporting views to CSV/XLSX...\n")
+for sql_file in EXPORT_SQLS:
+    print(f"▶ Export: {sql_file}")
+    start = time.time()
+    try:
+        with suppress_output():
+            export_sql_file(sql_file, db_path=DB_PATH, output_dir=Path("data/processed"))
+        elapsed = time.time() - start
+        print(f"✅ Export completed ({elapsed:.1f}s)\n")
+    except Exception as e:
+        elapsed = time.time() - start
+        print(f"❌ Export failed for {sql_file}: {e} ({elapsed:.1f}s)\n")

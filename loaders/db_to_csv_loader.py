@@ -22,55 +22,65 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 load_dotenv()
 
-# Use the dedicated select SQL we just added
-SQL_FILE = PROJECT_ROOT / "models" / "db_init" / "select_hkex_dataset.sql"
+# Require a SQL file path when called from CLI; also expose a function
+def export_sql_file(sql_file, db_path=None, output_dir=None):
+    """Execute the SQL file and export result(s) to CSV and Excel.
+
+    sql_file: path to .sql file
+    db_path: optional path to sqlite db (defaults to env DB_PATH or data/hongkong.db)
+    output_dir: optional path to output folder (defaults to data/processed)
+    """
+    SQL_FILE = Path(sql_file)
+    if not SQL_FILE.exists():
+        raise FileNotFoundError(f"SQL file not found: {SQL_FILE}")
+
+    DB_PATH_LOCAL = db_path or os.getenv("DB_PATH", "data/hongkong.db")
+    OUTPUT_DIR_LOCAL = Path(output_dir) if output_dir else PROJECT_ROOT / "data" / "processed"
+
+    OUTPUT_DIR_LOCAL.mkdir(parents=True, exist_ok=True)
+
+    sql_text = SQL_FILE.read_text(encoding="utf-8")
+    queries = [q.strip() for q in sql_text.split(";") if q.strip()]
+    if not queries:
+        raise ValueError("No queries found in SQL file.")
+
+    sql_stem = SQL_FILE.stem
+    if sql_stem.startswith("select_"):
+        out_base = sql_stem.replace("select_", "")
+    else:
+        out_base = sql_stem
+
+    with sqlite3.connect(DB_PATH_LOCAL) as conn:
+        for i, query in enumerate(queries, start=1):
+            df = pd.read_sql(query, conn)
+            if len(queries) == 1:
+                output_csv = OUTPUT_DIR_LOCAL / f"{out_base}.csv"
+                output_xlsx = OUTPUT_DIR_LOCAL / f"{out_base}.xlsx"
+            else:
+                output_csv = OUTPUT_DIR_LOCAL / f"{out_base}_query_{i}.csv"
+                output_xlsx = OUTPUT_DIR_LOCAL / f"{out_base}_query_{i}.xlsx"
+            df.to_csv(output_csv, index=False)
+            try:
+                df.to_excel(output_xlsx, index=False)
+            except Exception:
+                # Excel not available; CSV remains
+                pass
+    return True
 OUTPUT_DIR = PROJECT_ROOT / "data" / "processed"
 DB_PATH = os.getenv("DB_PATH", "data/hongkong.db")
 
 if __name__ == "__main__":
-    print(f"\n🚀 Exporting view to CSV + Excel, output directory: '{OUTPUT_DIR}'\n")
+    # CLI entrypoint: require a SQL filepath argument
+    if len(sys.argv) < 2:
+        print("Usage: python db_to_csv_loader.py <path/to/select_xxx.sql>")
+        sys.exit(2)
+    sql_arg = sys.argv[1]
+    print(f"\n🚀 Exporting view using '{sql_arg}' to CSV + Excel\n")
     start = time.time()
-
-    if not SQL_FILE.exists():
-        print(f"❌ SQL file not found: {SQL_FILE}")
-        exit(1)
-
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-
     try:
-        sql_text = SQL_FILE.read_text(encoding="utf-8")
-        # split by semicolon but keep only non-empty queries
-        queries = [q.strip() for q in sql_text.split(";") if q.strip()]
-
-        if not queries:
-            print("❌ No queries found in SQL file.")
-            exit(1)
-
-        with sqlite3.connect(DB_PATH) as conn:
-            for i, query in enumerate(queries, start=1):
-                print(f"\n▶ Running query {i}/{len(queries)}...")
-                try:
-                    df = pd.read_sql(query, conn)
-                    # If only one query, use a friendly filename
-                    if len(queries) == 1:
-                        output_csv = OUTPUT_DIR / "hkex_dataset.csv"
-                        output_xlsx = OUTPUT_DIR / "hkex_dataset.xlsx"
-                    else:
-                        output_csv = OUTPUT_DIR / f"query_{i}.csv"
-                        output_xlsx = OUTPUT_DIR / f"query_{i}.xlsx"
-                    # write both CSV and Excel
-                    df.to_csv(output_csv, index=False)
-                    try:
-                        df.to_excel(output_xlsx, index=False)
-                    except Exception:
-                        # If Excel writer is not available, continue after saving CSV
-                        print("⚠️ Could not write Excel file (missing engine). CSV saved.")
-                    print(f"✅ Saved {len(df)} rows to '{output_csv.name}' and '{output_xlsx.name}'")
-                except Exception as e:
-                    print(f"❌ Query {i} failed → {e}")
-
+        export_sql_file(sql_arg)
         elapsed = time.time() - start
         print(f"\n✅ Completed export in {elapsed:.1f}s")
     except Exception as e:
         elapsed = time.time() - start
-        print(f"\n❌ Script failed after {elapsed:.1f}s → {e}")
+        print(f"\n❌ Export failed after {elapsed:.1f}s → {e}")
