@@ -31,3 +31,5 @@ data/
 
 # Tester output files
 testing
+# Local work notes and sensitive drafts
+work_notes/
