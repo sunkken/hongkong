@@ -13,9 +13,11 @@ import time
 import os
 from contextlib import contextmanager, redirect_stdout, redirect_stderr
 from io import StringIO
+from pathlib import Path
 from dotenv import load_dotenv
 from loaders.db_loader_csv import csv_loader
 from loaders.db_loader_wrds import wrds_loader
+from loaders.db_run_sql import run_sql_file
 from helpers.export_isins import export_unique_isins
 
 # ------------------------------------------------------------
@@ -79,10 +81,19 @@ STOCK_CODE_EXPORT_OUTPUT = "data/stock_code_list.txt"
 # WRDS loaders configuration (downloads data from WRDS and pushes into SQLite Database)
 # ------------------------------------------------------------
 WRDS_LOADERS = [
-    {"sql_file": "models/db_init/dl_funda_a_170.sql", "table_name": "funda_a_170"},
-    {"sql_file": "models/db_init/dl_funda_q_170.sql", "table_name": "funda_q_170"},
-    {"sql_file": "models/db_init/dl_funda_a_isin.sql", "table_name": "funda_a_isin", "isin_list_file": "data/isin_list.txt"},
+    # {"sql_file": "models/db_init/dl_funda_a_170.sql", "table_name": "funda_a_170"},
+    # {"sql_file": "models/db_init/dl_funda_q_170.sql", "table_name": "funda_q_170"},
+    # {"sql_file": "models/db_init/dl_funda_a_isin.sql", "table_name": "funda_a_isin", "isin_list_file": "data/isin_list.txt"},
     {"sql_file": "models/db_init/dl_funda_q_isin.sql", "table_name": "funda_q_isin", "isin_list_file": "data/isin_list.txt"},
+]
+
+# ------------------------------------------------------------
+# Database queries (table and view creation)
+# ------------------------------------------------------------
+# Order matters: create `hkex_all_stock_code_isin` first, then `hkex_dataset` which depends on it
+DB_QUERIES = [
+    "models/db_init/isin_stock_code_export.sql",
+    "models/db_init/hkex_dataset.sql",
 ]
 
 # ------------------------------------------------------------
@@ -197,6 +208,22 @@ for loader in WRDS_LOADERS:
     print("-" * 60)
 
 # ------------------------------------------------------------
+# Run database queries
+# ------------------------------------------------------------
+if DB_QUERIES:
+    print("\n📚 Running database queries...\n")
+    for sql_file in DB_QUERIES:
+        print(f"▶️ {sql_file}")
+        start = time.time()
+        with suppress_output():
+            success = run_sql_file(sql_file, db_path=DB_PATH)
+        elapsed = time.time() - start
+        status = "✅ Success" if success else "❌ Failed"
+        loader_results.append((f"Query: {Path(sql_file).name}", status, 0, elapsed))
+        print(f"{status} ({elapsed:.1f}s)\n")
+    print("-" * 60)
+
+# ------------------------------------------------------------
 # Summary
 # ------------------------------------------------------------
 print("\n" + "=" * 60)
@@ -214,10 +241,28 @@ success_count = sum(1 for _, status, _ in results if "✅" in status)
 fail_count = len(results) - success_count
 loader_success = sum(1 for _, status, _, _ in loader_results if "✅" in status)
 loader_fail = len(loader_results) - loader_success
+query_success = sum(1 for loader_name, status, _, _ in loader_results if "Query:" in str(loader_name) and "✅" in str(status))
+query_fail = sum(1 for loader_name, status, _, _ in loader_results if "Query:" in str(loader_name) and "❌" in str(status))
 print("-" * 60)
 print(f"✅ Scripts successful: {success_count} ❌ Failed: {fail_count}")
 print(f"✅ Loaders successful: {loader_success} ❌ Failed: {loader_fail}")
+if query_success + query_fail > 0:
+    print(f"✅ Queries successful: {query_success} ❌ Failed: {query_fail}")
 print(f"⏱️ Total runtime: {time.time() - start_total:.1f}s")
 print("=" * 60 + "\n")
 if fail_count + loader_fail > 0:
     print("⚠️ Some scripts/loaders failed. Please check the log above.\n")
+
+# ------------------------------------------------------------
+# Export hkex_dataset view to CSV
+# ------------------------------------------------------------
+print("\n📤 Exporting `hkex_dataset` view to CSV...\n")
+start = time.time()
+try:
+    with suppress_output():
+        runpy.run_path("loaders/db_to_csv_loader.py", run_name="__main__")
+    elapsed = time.time() - start
+    print(f"✅ Export completed ({elapsed:.1f}s)\n")
+except Exception as e:
+    elapsed = time.time() - start
+    print(f"❌ Export failed: {e} ({elapsed:.1f}s)\n")
