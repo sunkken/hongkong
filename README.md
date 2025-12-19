@@ -5,14 +5,18 @@ This project downloads transforms securities data from the Hong Kong Exchange (H
 
 ### Pages
 [Securities Lists Page](https://www.hkex.com.hk/Services/Trading/Securities/Securities-Lists)  
-[New Listings Page](https://www2.hkexnews.hk/New-Listings/New-Listing-Information/)  
+[New Listings Page](https://www2.hkexnews.hk/New-Listings/New-Listing-Information/)
+[Auditor Reports Archive](https://www3.hkexnews.hk/reports/auditorreport/ncms/auditorreport_anntdate_des.htm)
+[Press Announcements Archive](https://www1.hkexnews.hk/search/titlesearch.xhtml)
 
 ### Files
 [ISINs Assigned by HKEX](https://www.hkex.com.hk/-/media/HKEX-Market/Services/Trading/Securities/Securities-Lists/ISINs-assigned-by-HKEX/isinsehk.xls)  
 [ISINs Assigned by Other Numbering Agencies](https://www.hkex.com.hk/-/media/HKEX-Market/Services/Trading/Securities/Securities-Lists/ISINs-assigned-by-Other-Numbering-Agencies/isino.xls)  
 [Securities Using Standard Transfer Form](https://www.hkex.com.hk/-/media/HKEX-Market/Services/Trading/Securities/Securities-Lists/Securities-Using-Standard-Transfer-Form-(including-GEM)-By-Stock-Code-Order/secstkorder.xls)  
-[Main Board New Listing Reports](https://www2.hkexnews.hk/-/media/HKEXnews/Homepage/New-Listings/New-Listing-Information/New-Listing-Report/Main/NLR2025_Eng.xlsx) (1994-2025)  
-[GEM New Listing Reports](https://www2.hkexnews.hk/-/media/HKEXnews/Homepage/New-Listings/New-Listing-Information/New-Listing-Report/GEM/e_newlistings2025.xlsx) (1999-2025)  
+Main Board New Listings Files (xls, 1994-2025)  
+GEM New Listings Files (xls, 1999-2025)  
+Auditor Reports (HTML & PDFs, 2007-2025)  
+Press Announcements (JSON & PDFs, 2000-2025)
 
 ---
 
