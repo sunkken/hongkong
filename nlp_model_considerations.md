@@ -1,7 +1,7 @@
 # NLP Model Considerations — Auditor Report Classification
 
-Date: 2025-12-14
-Author: X
+Date: 2025-12-19
+Author: TS
 
 ## Purpose
 Summarise options and an execution plan for classifying auditor reports into these flags:
@@ -18,7 +18,7 @@ We will first run a fast, exact-phrase baseline on extracted `.txt` files, then 
 
 ## Dataset & constraints
 - ~4,400 PDF reports → extracted as `.txt` files (script: `modules/extract_auditor_pdfs_to_txt.py`).
-- Typical length: ~50k–150k characters per document (~8k–25k tokens).
+- Typical length: ~50k–300k characters per document (~20k–120k tokens).
 - Large variety and inconsistent placement of relevant sections; financial statements/notes (tables) are irrelevant and should be trimmed if possible.
 - Goal: a reliable baseline with minimal cost, quick to iterate.
 
@@ -52,10 +52,10 @@ Notes:
 ## Phase 3 — Lightweight NLP (only if baseline+slicing insufficient)
 Two routes:
 
-Option A — Managed LLMs (Google Gemini)
+Option A — Managed LLMs (Google Gemini, GPT, Claude)
 - Pipeline: chunk → (optional) embed → relevance filtering → classification.
 - Steps:
-  1. Chunk each document into overlapping chunks (e.g., 2k–4k token chunks with 20% overlap).
+  1. Chunk each document into overlapping chunks (e.g., 20k–40k token chunks with 20% overlap for moderate context; larger if long-context confirmed).
   2. Compute embeddings for each chunk (embedding model e.g., `text-embedding-3-small` or sentence-transformers locally).
   3. Use the auditor-opinion category queries to retrieve top-k relevant chunks per doc.
   4. Send only those relevant chunks to the LLM for classification or use a zero-shot prompt to get a structured JSON output.
@@ -100,30 +100,33 @@ For chunking + embeddings (prototype):
 
 A few pragmatic notes to guide chunking and model selection:
 
-- Token ↔ characters (rule of thumb): 1 token ≈ 3–4 English characters. Using that:
-  - 50,000 characters ≈ 12k–17k tokens
-  - 150,000 characters ≈ 37k–50k tokens
-  These are rough estimates — exact counts depend on tokeniser and language.
+- **Token ↔ characters (rule of thumb):**  
+  1 token ≈ 3–4 English characters. Using that:  
+  - 50,000 characters ≈ 10k–20k tokens  
+  - 300,000 characters ≈ 60k–120k tokens  
+  These are rough estimates — exact counts depend on tokenizer and language.
 
-- Google Gemini (managed LLMs):
-  - Some Gemini variants offer very long-context capabilities (check your Gemini plan and model docs for exact limits).
-  - If you have a long-context model available, you can use larger chunks (tens of thousands of tokens). If not, treat Gemini like other LLMs and use smaller chunks.
+- **Managed LLMs (Gemini, GPT, Claude, etc.):**  
+  - Many current long-context variants support **128k tokens or more** (some even 200k+).  
+  - If you confirm access to a long-context model, you can process **entire documents or very large chunks** (e.g., 50k–100k tokens) without aggressive splitting.  
+  - For smaller-context plans (8k–32k tokens), chunking is still required.
 
-- ModernBERT / transformer models (local):
-  - Typical transformer sequence-length limits are in the range ~512–4096 tokens depending on the model and architecture.
-  - Many BERT-family variants are limited to 512 tokens; some modern long-context variants extend this to a few thousand tokens.
+- **Local transformer models (BERT-family, ModernBERT, etc.):**  
+  - Typical sequence-length limits remain **512–4096 tokens** for most local models.  
+  - Long-context transformer variants exist (e.g., RoPE-based or sliding-window architectures) but rarely exceed **16k tokens** in practical deployments.
 
-- Practical chunking defaults (safe across systems):
-  - Default chunk size: **1,000–2,000 tokens** (≈ 3k–8k characters). This is a conservative, portable choice that works for local transformers and managed LLMs with moderate context.
-  - If you confirm a long-context managed model, you can increase chunk size (e.g., 8k–16k tokens) to reduce the number of chunks per document.
-  - Use 10–20% overlap between chunks to preserve context across boundaries.
+- **Practical chunking defaults (safe across systems):**  
+  - **Conservative default:** 1,000–2,000 tokens (≈ 3k–8k characters). Works everywhere.  
+  - **If long-context managed model confirmed:**  
+    - Use **8k–16k tokens** for efficiency, or even larger (e.g., 32k+) if the model supports it and latency/cost are acceptable.  
+  - Maintain **10–20% overlap** between chunks to preserve context across boundaries.
 
-- Cost / speed considerations:
-  - Smaller chunks → more API calls but cheaper per-call token usage and safer for local models.
-  - Use embeddings + retrieval to pre-filter chunks: compute embeddings once, retrieve top-k relevant chunks per document, then classify only those chunks with an LLM — this drastically reduces cost.
+- **Cost / speed considerations:**  
+  - Larger chunks reduce API calls but increase per-call cost and latency.  
+  - Use **embeddings + retrieval** to pre-filter chunks: compute embeddings once, retrieve top-k relevant chunks per document, then classify only those chunks with an LLM — this drastically reduces cost.
 
-- Aggregation strategy:
-  - Do per-chunk classification, then aggregate to document-level (majority vote or weighted by embedding similarity/confidence).
+- **Aggregation strategy:**  
+  - Do per-chunk classification, then aggregate to document-level (majority vote or weighted by embedding similarity/confidence).  
   - Add a final `unclear` flag when (1,2,3) are all false or when chunk-level labels conflict strongly.
 
 Keep this section as a quick reminder when you design chunking and when you talk to IT about which managed model / plan is available.
