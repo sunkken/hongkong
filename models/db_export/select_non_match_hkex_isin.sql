@@ -1,1 +1,1 @@
-SELECT stock_code, isin, company, stock_type FROM non_match_hkex_isin
+SELECT * FROM non_match_hkex_isin

@@ -14,6 +14,8 @@ import os
 import time
 import sqlite3
 import pandas as pd
+import re
+from openpyxl import load_workbook
 from dotenv import load_dotenv
 
 # Ensure project root in sys.path (keeps behaviour similar to original)
@@ -66,13 +68,7 @@ def export_sql_file(sql_file, db_path=None, output_dir=None, output_format='csv'
             if output_format in ['csv']:
                 df.to_csv(output_csv, index=False)
             if output_format in ['xlsx']:
-                try:
-                    df.to_excel(output_xlsx, index=False)
-                except Exception:
-                    # Excel not available; skip if only xlsx requested
-                    if output_format == 'xlsx':
-                        raise
-                    pass
+                df.to_excel(output_xlsx, index=False, engine='openpyxl')
             if output_format in ['txt']:
                 if df.shape[1] != 1:
                     raise ValueError("TXT export requires single-column query result.")

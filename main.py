@@ -47,6 +47,7 @@ scripts = [
     "loaders/download_hkex_listings.py",
     "loaders/download_hkex_auditor_reports.py",
     "loaders/download_hkex_auditor_pdfs.py",
+    "modules/rename_pdfs_by_stock_code.py",
     "modules/hkex_xlsx_converter.py",
     "modules/hkex_isino_bronze.py",
     "modules/hkex_isino_stock_types.py",
