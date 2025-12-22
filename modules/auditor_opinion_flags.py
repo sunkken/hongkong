@@ -86,7 +86,7 @@ def scan_opinions(stock_codes=None):
         try:
             cache_df = pd.read_csv(OUTPUT_CSV)
             # normalize cached document names to stems (no extension)
-            processed = set(Path(x).stem for x in cache_df["document_id"].tolist())
+            processed = set(Path(x).stem for x in cache_df["document_name"].tolist())
         except Exception:
             cache_df = pd.DataFrame()
 
@@ -146,7 +146,7 @@ def scan_opinions(stock_codes=None):
         # Check for opinion patterns
         flags = {k: int(bool(p.search(text_proc))) for k, p in PATTERNS.items()}
 
-        row_df = pd.DataFrame([{"document_id": doc_stem, "report_date": report_date, **flags}])
+        row_df = pd.DataFrame([{"document_name": doc_stem, "report_date": report_date, **flags}])
         
         # Append to working dataframe and save incrementally
         working_df = pd.concat([working_df, row_df], ignore_index=True)
