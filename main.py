@@ -18,8 +18,7 @@ from dotenv import load_dotenv
 from loaders.db_loader_csv import csv_loader
 from loaders.db_loader_wrds import wrds_loader
 from loaders.db_run_sql import run_sql_file
-from loaders.db_to_csv_loader import export_sql_file
-from helpers.export_isins import export_unique_isins
+from loaders.db_to_file_loader import export_sql_file
 
 # ------------------------------------------------------------
 # Silent mode context manager
@@ -38,6 +37,7 @@ def suppress_output():
 # ------------------------------------------------------------
 load_dotenv()
 DB_PATH = os.getenv("DB_PATH", "data/hongkong.db")  # fallback if .env not found
+OUTPUT_FORMAT = os.getenv("OUTPUT_FORMAT", "xlsx")  # csv, xlsx, or txt
 
 # ------------------------------------------------------------
 # Scripts to run (downloaders and data cleaners)
@@ -64,6 +64,7 @@ scripts = [
 CSV_LOADERS = [
     {"csv_file": "data/silver/gem_silver.csv", "table_name": "hkex_gem"},
     {"csv_file": "data/silver/main_silver.csv", "table_name": "hkex_main"},
+    {"csv_file": "data/bronze/isino_bronze.csv", "table_name": "hkex_isin"},
     {"csv_file": "data/bronze/isino_stock_types.csv", "table_name": "desc_hkex_stock_types"},
     {"csv_file": "data/bronze/isino_national_agencies.csv", "table_name": "desc_hkex_national_agencies"},
     {"csv_file": "data/raw/auditor_reports.csv", "table_name": "hkex_auditor_reports"},
@@ -73,9 +74,9 @@ CSV_LOADERS = [
 # ------------------------------------------------------------
 # Code export configuration (export unique ISINs and Stock Codes from database to text files)
 # ------------------------------------------------------------
-ISIN_EXPORT_QUERY_FILE = "models/db_init/isin_export.sql"
+ISIN_EXPORT_QUERY_FILE = "models/db_export/select_union_hkex_isin.sql"
 ISIN_EXPORT_OUTPUT = "data/isin_list.txt"
-STOCK_CODE_EXPORT_QUERY_FILE = "models/db_init/stock_code_export.sql"
+STOCK_CODE_EXPORT_QUERY_FILE = "models/db_export/select_union_hkex_stock_code.sql"
 STOCK_CODE_EXPORT_OUTPUT = "data/stock_code_list.txt"
 
 # ------------------------------------------------------------
@@ -93,18 +94,20 @@ WRDS_LOADERS = [
 # ------------------------------------------------------------
 # Order matters: create `hkex_all_stock_code_isin` first, then `hkex_dataset` and `hkex_document_dataset` which depend on it
 DB_QUERIES = [
-    "models/db_init/isin_stock_code_export.sql",
-    "models/db_init/hkex_dataset.sql",
-    "models/db_init/hkex_document_dataset.sql",
+    "models/db_init/cv_hkex_all_stock_code_isin.sql",
+    "models/db_init/cv_hkex_dataset.sql",
+    "models/db_init/cv_hkex_document_dataset.sql",
 ]
 
 # ------------------------------------------------------------
-# Export Queries (export views to CSV/XLSX)
+# Export Queries (export views/tables into folder data/processed. OUTPUT_FORMAT from environment variables)
 # ------------------------------------------------------------
 EXPORT_SQLS = [
-    "models/db_init/select_hkex_dataset.sql",
-    "models/db_init/select_hkex_document_dataset.sql",
-    "models/db_init/select_hkex_dataset_hkex_document_exists.sql",
+    "models/db_export/select_hkex_dataset.sql",
+    "models/db_export/select_hkex_document_dataset.sql",
+    "models/db_export/select_hkex_dataset_hkex_document_exists.sql",
+    "models/db_export/select_hkex_isin.sql",
+    "models/db_export/select_funda_q_170.sql",
 ]
 
 # ------------------------------------------------------------
@@ -158,13 +161,14 @@ for loader in CSV_LOADERS:
 # Export ISIN list BEFORE WRDS loaders
 # ------------------------------------------------------------
 print("\n📄 Exporting unique ISINs...\n")
-with open(ISIN_EXPORT_QUERY_FILE, "r") as f:
-    isin_sql = f.read()
 start = time.time()
 try:
     with suppress_output():
-        num_isins = export_unique_isins(DB_PATH, ISIN_EXPORT_OUTPUT, isin_sql)
+        export_sql_file(ISIN_EXPORT_QUERY_FILE, db_path=DB_PATH, output_format='txt', output_file=ISIN_EXPORT_OUTPUT)
     elapsed = time.time() - start
+    # Count lines in the file
+    with open(ISIN_EXPORT_OUTPUT, 'r') as f:
+        num_isins = len(f.readlines())
     loader_results.append(("ISIN Export", "✅ Success", num_isins, elapsed))
     print(f"✅ Exported {num_isins} ISINs to {ISIN_EXPORT_OUTPUT} ({elapsed:.1f}s)")
 except Exception as e:
@@ -176,14 +180,14 @@ except Exception as e:
 # Export Stock Code list AFTER ISIN export
 # ------------------------------------------------------------
 print("\n📄 Exporting unique Stock Codes...\n")
-with open(STOCK_CODE_EXPORT_QUERY_FILE, "r") as f:
-    stock_code_sql = f.read()
 start = time.time()
 try:
-    from helpers.export_stock_codes import export_unique_stock_codes
     with suppress_output():
-        num_stock_codes = export_unique_stock_codes(DB_PATH, STOCK_CODE_EXPORT_OUTPUT, stock_code_sql)
+        export_sql_file(STOCK_CODE_EXPORT_QUERY_FILE, db_path=DB_PATH, output_format='txt', output_file=STOCK_CODE_EXPORT_OUTPUT)
     elapsed = time.time() - start
+    # Count lines in the file
+    with open(STOCK_CODE_EXPORT_OUTPUT, 'r') as f:
+        num_stock_codes = len(f.readlines())
     loader_results.append(("Stock Code Export", "✅ Success", num_stock_codes, elapsed))
     print(f"✅ Exported {num_stock_codes} stock codes to {STOCK_CODE_EXPORT_OUTPUT} ({elapsed:.1f}s)")
 except Exception as e:
@@ -274,7 +278,7 @@ for sql_file in EXPORT_SQLS:
     start = time.time()
     try:
         with suppress_output():
-            export_sql_file(sql_file, db_path=DB_PATH, output_dir=Path("data/processed"))
+            export_sql_file(sql_file, db_path=DB_PATH, output_dir=Path("data/processed"), output_format=OUTPUT_FORMAT)
         elapsed = time.time() - start
         print(f"✅ Export completed ({elapsed:.1f}s)\n")
     except Exception as e:
