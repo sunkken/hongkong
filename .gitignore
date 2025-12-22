@@ -24,6 +24,7 @@ logs/
 
 # Environment variables (WRDS user info etc.)
 .env
+google-gemini.cfg
 
 # Data
 hongkong.db
