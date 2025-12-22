@@ -75,9 +75,9 @@ CSV_LOADERS = [
 # Code export configuration (export unique ISINs and Stock Codes from database to text files)
 # ------------------------------------------------------------
 ISIN_EXPORT_QUERY_FILE = "models/db_export/select_union_hkex_isin.sql"
-ISIN_EXPORT_OUTPUT = "data/isin_list.txt"
+ISIN_EXPORT_OUTPUT = "data/processed/isin_list.txt"
 STOCK_CODE_EXPORT_QUERY_FILE = "models/db_export/select_union_hkex_stock_code.sql"
-STOCK_CODE_EXPORT_OUTPUT = "data/stock_code_list.txt"
+STOCK_CODE_EXPORT_OUTPUT = "data/processed/stock_code_list.txt"
 
 # ------------------------------------------------------------
 # WRDS loaders configuration (downloads data from WRDS and pushes into SQLite Database)
@@ -85,8 +85,8 @@ STOCK_CODE_EXPORT_OUTPUT = "data/stock_code_list.txt"
 WRDS_LOADERS = [
     {"sql_file": "models/db_init/dl_funda_a_170.sql", "table_name": "funda_a_170"},
     {"sql_file": "models/db_init/dl_funda_q_170.sql", "table_name": "funda_q_170"},
-    {"sql_file": "models/db_init/dl_funda_a_isin.sql", "table_name": "funda_a_isin", "isin_list_file": "data/isin_list.txt"},
-    {"sql_file": "models/db_init/dl_funda_q_isin.sql", "table_name": "funda_q_isin", "isin_list_file": "data/isin_list.txt"},
+    {"sql_file": "models/db_init/dl_funda_a_isin.sql", "table_name": "funda_a_isin", "isin_list_file": "data/processed/isin_list.txt"},
+    {"sql_file": "models/db_init/dl_funda_q_isin.sql", "table_name": "funda_q_isin", "isin_list_file": "data/processed/isin_list.txt"},
 ]
 
 # ------------------------------------------------------------
@@ -97,6 +97,8 @@ DB_QUERIES = [
     "models/db_init/cv_hkex_all_stock_code_isin.sql",
     "models/db_init/cv_hkex_dataset.sql",
     "models/db_init/cv_hkex_document_dataset.sql",
+    "models/db_init/cv_non_match_funda_q_170.sql",    
+    "models/db_init/cv_non_match_hkex_isin.sql",
 ]
 
 # ------------------------------------------------------------
@@ -107,7 +109,8 @@ EXPORT_SQLS = [
     "models/db_export/select_hkex_document_dataset.sql",
     "models/db_export/select_hkex_dataset_hkex_document_exists.sql",
     "models/db_export/select_hkex_isin.sql",
-    "models/db_export/select_funda_q_170.sql",
+    "models/db_export/select_non_match_funda_q_170.sql",
+    "models/db_export/select_non_match_hkex_isin.sql",
 ]
 
 # ------------------------------------------------------------
