@@ -47,7 +47,6 @@ scripts = [
     "loaders/download_hkex_listings.py",
     "loaders/download_hkex_auditor_reports.py",
     "loaders/download_hkex_auditor_pdfs.py",
-    "modules/rename_pdfs_by_stock_code.py",
     "modules/hkex_xlsx_converter.py",
     "modules/hkex_isino_bronze.py",
     "modules/hkex_isino_stock_types.py",
@@ -56,7 +55,6 @@ scripts = [
     "modules/hkex_gem_bronze.py",
     "modules/hkex_main_silver.py",
     "modules/hkex_gem_silver.py",
-    "modules/auditor_opinion_flags.py",
 ]
 
 # ------------------------------------------------------------
@@ -88,6 +86,14 @@ WRDS_LOADERS = [
     {"sql_file": "models/db_init/dl_funda_q_170.sql", "table_name": "funda_q_170"},
     {"sql_file": "models/db_init/dl_funda_a_isin.sql", "table_name": "funda_a_isin", "isin_list_file": "data/processed/isin_list.txt"},
     {"sql_file": "models/db_init/dl_funda_q_isin.sql", "table_name": "funda_q_isin", "isin_list_file": "data/processed/isin_list.txt"},
+]
+
+# ------------------------------------------------------------
+# DB dependent scripts (run after WRDS loaders)
+# ------------------------------------------------------------
+DB_DEPENDENT_SCRIPTS = [
+    "modules/auditor_opinion_flags.py",
+    "modules/rename_pdfs_by_stock_code.py",
 ]
 
 # ------------------------------------------------------------
@@ -224,6 +230,25 @@ for loader in WRDS_LOADERS:
         elapsed = time.time() - start
         loader_results.append((f"WRDS Loader: {table_name}", f"❌ Failed ({e})", 0, elapsed))
         print(f"❌ Failed WRDS loader '{table_name}': {e}\n")
+    print("-" * 60)
+
+# ------------------------------------------------------------
+# Run DB dependent scripts (after WRDS loaders)
+# ------------------------------------------------------------
+print("\n🔍 Running DB dependent scripts...\n")
+for script in DB_DEPENDENT_SCRIPTS:
+    print(f"▶️ {script}")
+    start = time.time()
+    try:
+        with suppress_output():
+            runpy.run_path(script, run_name="__main__")
+        elapsed = time.time() - start
+        print(f"✅ Done: {script} ({elapsed:.1f}s)")
+        results.append((script, "✅ Success", elapsed))
+    except Exception as e:
+        elapsed = time.time() - start
+        print(f"❌ Failed: {script} ({elapsed:.1f}s) → {e}")
+        results.append((script, f"❌ Failed ({e})", elapsed))
     print("-" * 60)
 
 # ------------------------------------------------------------
