@@ -38,7 +38,8 @@ def rename_pdfs():
         filename = os.path.basename(pdf_path)
         if not filename.startswith(f"[c{stock_code}]-["):
             # Construct new filename
-            new_filename = f"[c{stock_code}]-[{filename}]"
+            stem, extension = os.path.splitext(filename)
+            new_filename = f"[c{stock_code}]-[{stem}]{extension}"
             new_pdf_path = os.path.join("data", "processed", "auditor_pdfs", new_filename).replace(os.sep, "/")
             
             # Copy file if it exists (keep original)
@@ -83,11 +84,16 @@ def revert_db_paths():
         stock_code, pdf_path = row
         filename = os.path.basename(pdf_path)
         if filename.startswith(f"[c{stock_code}]-["):
-            # Remove prefix
-            original_filename = filename[len(f"[c{stock_code}]-["):-1]  # Remove "[c<stock_code>]-[" and the trailing ]
-            original_pdf_path = os.path.join("data", "raw", "auditor_pdfs", original_filename).replace(os.sep, "/")
-            cursor.execute("UPDATE hkex_auditor_reports SET pdf_path = ? WHERE pdf_path = ?", (original_pdf_path, pdf_path))
-            reverted_count += 1
+            prefix = f"[c{stock_code}]-[" 
+            after_prefix = filename[len(prefix):]
+            parts = after_prefix.split(']', 1)
+            if len(parts) == 2:
+                original_filename = parts[0] + parts[1]
+                original_pdf_path = os.path.join("data", "raw", "auditor_pdfs", original_filename).replace(os.sep, "/")
+                cursor.execute("UPDATE hkex_auditor_reports SET pdf_path = ? WHERE pdf_path = ?", (original_pdf_path, pdf_path))
+                reverted_count += 1
+            else:
+                print(f"Error parsing filename: {filename}")
     
     conn.commit()
     conn.close()
