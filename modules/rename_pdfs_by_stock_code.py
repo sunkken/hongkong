@@ -28,13 +28,13 @@ def rename_pdfs():
     cursor = conn.cursor()
     
     # Get all pdf_path and stock_code
-    cursor.execute("SELECT id, stock_code, pdf_path, document_name FROM hkex_auditor_reports WHERE pdf_path IS NOT NULL AND TRIM(pdf_path) != ''")
+    cursor.execute("SELECT stock_code, pdf_path, document_name FROM hkex_auditor_reports WHERE pdf_path IS NOT NULL AND TRIM(pdf_path) != ''")
     rows = cursor.fetchall()
     
     renamed_count = 0
     skipped_count = 0
     for row in rows:
-        record_id, stock_code, pdf_path, document_name = row
+        stock_code, pdf_path, document_name = row
         filename = os.path.basename(pdf_path)
         if not filename.startswith(f"[c{stock_code}]-["):
             # Construct new filename
@@ -52,7 +52,7 @@ def rename_pdfs():
                 if os.path.exists(new_full_path):
                     print(f"📁 Copied: {filename} -> {new_filename}")
                     # Update DB
-                    cursor.execute("UPDATE hkex_auditor_reports SET pdf_path = ? WHERE id = ?", (new_pdf_path, record_id))
+                    cursor.execute("UPDATE hkex_auditor_reports SET pdf_path = ? WHERE pdf_path = ?", (new_pdf_path, pdf_path))
                     renamed_count += 1
                 else:
                     print(f"❌ Failed to copy: {filename}")
@@ -75,18 +75,18 @@ def revert_db_paths():
     cursor = conn.cursor()
     
     # Get rows where pdf_path is in processed
-    cursor.execute("SELECT id, stock_code, pdf_path FROM hkex_auditor_reports WHERE pdf_path LIKE 'data/processed/auditor_pdfs/%'")
+    cursor.execute("SELECT stock_code, pdf_path FROM hkex_auditor_reports WHERE pdf_path LIKE 'data/processed/auditor_pdfs/%'")
     rows = cursor.fetchall()
     
     reverted_count = 0
     for row in rows:
-        record_id, stock_code, pdf_path = row
+        stock_code, pdf_path = row
         filename = os.path.basename(pdf_path)
         if filename.startswith(f"[c{stock_code}]-["):
             # Remove prefix
             original_filename = filename[len(f"[c{stock_code}]-["):-1]  # Remove "[c<stock_code>]-[" and the trailing ]
             original_pdf_path = os.path.join("data", "raw", "auditor_pdfs", original_filename).replace(os.sep, "/")
-            cursor.execute("UPDATE hkex_auditor_reports SET pdf_path = ? WHERE id = ?", (original_pdf_path, record_id))
+            cursor.execute("UPDATE hkex_auditor_reports SET pdf_path = ? WHERE pdf_path = ?", (original_pdf_path, pdf_path))
             reverted_count += 1
     
     conn.commit()
