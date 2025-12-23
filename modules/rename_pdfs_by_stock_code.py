@@ -11,6 +11,7 @@ import os
 import sqlite3
 import shutil
 import sys
+import re
 
 DB_PATH = "data/hongkong.db"
 PDF_DIR = "data/raw/auditor_pdfs"
@@ -39,7 +40,14 @@ def rename_pdfs():
         if not filename.startswith(f"[c{stock_code}]-["):
             # Construct new filename
             stem, extension = os.path.splitext(filename)
-            new_filename = f"[c{stock_code}]-[{stem}]{extension}"
+            match = re.search(r'\d{8}', stem)
+            if match:
+                date = match.group(0)
+                remaining_stem = stem[match.end():]
+            else:
+                date = "00000000"
+                remaining_stem = stem
+            new_filename = f"[c{stock_code}]-[{date}]-[{remaining_stem}]-[{stem}]{extension}"
             new_pdf_path = os.path.join("data", "processed", "auditor_pdfs", new_filename).replace(os.sep, "/")
             
             # Copy file if it exists (keep original)
@@ -84,11 +92,11 @@ def revert_db_paths():
         stock_code, pdf_path = row
         filename = os.path.basename(pdf_path)
         if filename.startswith(f"[c{stock_code}]-["):
-            prefix = f"[c{stock_code}]-[" 
-            after_prefix = filename[len(prefix):]
-            parts = after_prefix.split(']', 1)
-            if len(parts) == 2:
-                original_filename = parts[0] + parts[1]
+            parts = filename.split(']-[', 3)
+            if len(parts) == 4:
+                stem = parts[3].rstrip(']')
+                extension = os.path.splitext(filename)[1]
+                original_filename = stem + extension
                 original_pdf_path = os.path.join("data", "raw", "auditor_pdfs", original_filename).replace(os.sep, "/")
                 cursor.execute("UPDATE hkex_auditor_reports SET pdf_path = ? WHERE pdf_path = ?", (original_pdf_path, pdf_path))
                 reverted_count += 1
