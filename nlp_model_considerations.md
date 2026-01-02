@@ -14,6 +14,18 @@ Summarise options and an execution plan for classifying auditor reports into the
 
 We will first run a fast, exact-phrase baseline on extracted `.txt` files, then (only if needed) try a lightweight NLP pipeline using chunking + retrieval and a managed LLM (Gemini) or a local transformer (ModernBERT) later.
 
+### Classification Criteria — Audit Report Outcomes
+
+| Report Element | Type | Severity / Impact | Meaning |
+|---|---|---|---|
+| **Qualified Opinion** | Modified Opinion | Moderate | "Except for" one or two specific issues, the financial statements are fairly presented in all material respects. The auditor has reservations about limited aspects of the business or accounting treatment. |
+| **Adverse Opinion** | Modified Opinion | **Highest** | The financial statements are materially misstated or misleading and cannot be relied upon as a whole. The auditor cannot certify their fairness. |
+| **Disclaimer of Opinion** | Modified Opinion | High (Unknown) | The auditor cannot form an opinion because they lacked sufficient evidence, independence, or scope during the audit. The financial statements remain unverified and potentially unreliable. |
+| **Emphasis of Matter** | Communication (Clean Opinion) | Informational | The financial statements are fairly presented and the audit opinion is unmodified. However, the auditor draws attention to a specific matter (e.g., related-party transactions, significant uncertainty, subsequent events) that users should carefully consider. |
+| **Material Uncertainty Regarding Going Concern (MURGC)** | Communication (Clean Opinion) | Informational | The financial statements are fairly presented, but the auditor has identified substantial doubt about the company's ability to continue as a going concern in the foreseeable future. Users should assess solvency and liquidation risk. |
+
+---
+
 ---
 
 ## Dataset & constraints
@@ -130,3 +142,4 @@ A few pragmatic notes to guide chunking and model selection:
   - Add a final `unclear` flag when (1,2,3) are all false or when chunk-level labels conflict strongly.
 
 Keep this section as a quick reminder when you design chunking and when you talk to IT about which managed model / plan is available.
+
