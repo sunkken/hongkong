@@ -1,3 +1,6 @@
+DROP VIEW IF EXISTS fundq_hkex_classified;
+
+CREATE VIEW fundq_hkex_classified AS
 WITH base_query AS (
     SELECT 
         fq.*,
