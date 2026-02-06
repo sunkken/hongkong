@@ -1,7 +1,7 @@
 WITH base_query AS (
     SELECT 
         fq.*,
-        ha.hkex_stock_code,
+        ha.hkex_stock_code as aof_stock_code,
         ha.aof_qualified_op,
         ha.aof_adverse_op,
         ha.aof_disclaimer_op,
@@ -68,11 +68,11 @@ FROM
     base_query bq
 LEFT JOIN 
     hkex_gem gem 
-    ON bq.hkex_stock_code = gem.stock_code
+    ON bq.aof_stock_code = gem.stock_code
     AND gem.listing_date = (SELECT max_listing_date FROM gem_latest WHERE stock_code = gem.stock_code)
 LEFT JOIN 
     hkex_main main 
-    ON bq.hkex_stock_code = main.stock_code
+    ON bq.aof_stock_code = main.stock_code
     AND main.listing_date = (SELECT max_listing_date FROM main_latest WHERE stock_code = main.stock_code)
 ORDER BY 
     bq.gvkey, bq.datadate;

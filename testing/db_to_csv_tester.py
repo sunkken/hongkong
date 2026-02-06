@@ -12,6 +12,7 @@ from pathlib import Path
 import os
 import time
 import sqlite3
+import argparse
 import pandas as pd
 from dotenv import load_dotenv
 
@@ -34,7 +35,28 @@ DB_PATH = os.getenv("DB_PATH", "data/hongkong.db")  # SQLite database path
 # Run CSV test
 # ----------------------------
 if __name__ == "__main__":
-    print(f"\n🚀 Running CSV tester, output directory: '{OUTPUT_DIR}'\n")
+    parser = argparse.ArgumentParser(
+        description="Run SQL queries from a .sql file and save results to files."
+    )
+    parser.add_argument(
+        "format_pos",
+        nargs="?",
+        choices=["csv", "xlsx", "dta"],
+        help="Output format for query results.",
+    )
+    parser.add_argument(
+        "--format",
+        dest="format",
+        default=None,
+        choices=["csv", "xlsx", "dta"],
+        help="Output format for query results (overrides positional).",
+    )
+    args = parser.parse_args()
+
+    output_format = (args.format or args.format_pos or "csv").lower()
+    print(
+        f"\n🚀 Running CSV tester, output directory: '{OUTPUT_DIR}', format: '{output_format}'\n"
+    )
     start = time.time()
 
     if not SQL_FILE.exists():
@@ -60,8 +82,26 @@ if __name__ == "__main__":
                 print(f"\n▶ Running query {i}/{len(queries)}...")
                 try:
                     df = pd.read_sql(query, conn)
-                    output_file = OUTPUT_DIR / f"query_{i}.csv"
-                    df.to_csv(output_file, index=False)
+                    output_file = OUTPUT_DIR / f"query_{i}.{output_format}"
+
+                    if output_format == "csv":
+                        df.to_csv(output_file, index=False)
+                    elif output_format == "xlsx":
+                        with pd.ExcelWriter(
+                            output_file,
+                            engine="xlsxwriter",
+                            engine_kwargs={
+                                "options": {
+                                    "strings_to_urls": False,
+                                }
+                            },
+                        ) as writer:
+                            df.to_excel(writer, index=False, sheet_name="results")
+                    elif output_format == "dta":
+                        df.to_stata(output_file, write_index=False)
+                    else:
+                        raise ValueError(f"Unsupported format: {output_format}")
+
                     print(f"✅ Saved {len(df)} rows to '{output_file.name}'")
                 except Exception as e:
                     print(f"❌ Query {i} failed → {e}")
