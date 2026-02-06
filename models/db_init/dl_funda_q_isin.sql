@@ -1,4 +1,4 @@
-SELECT gvkey, isin, conm, datadate, datacqtr, datafqtr, fyearq, fqtr
+SELECT *
 FROM comp.g_fundq
 WHERE indfmt = 'INDL'
   AND popsrc = 'I'
